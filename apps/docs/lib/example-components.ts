@@ -31,6 +31,7 @@ export const exampleComponentLoaders = {
   'mnist-classifier': () => import('../examples/mnist-classifier/index'),
   'air-painting': () => import('../examples/air-painting/index'),
   'three-tsl': () => import('../examples/three-tsl/index'),
+  'boot-void': () => import('../examples/boot-void/index'),
 } satisfies Record<ExampleSlug, ExampleComponentLoader>;
 
 export function getExampleComponentLoader(slug: ExampleSlug): ExampleComponentLoader {
