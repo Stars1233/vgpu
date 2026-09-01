@@ -3,6 +3,7 @@ node_modules
 
 # generated content
 .source
+generated/examples-api
 
 # test and build output
 coverage

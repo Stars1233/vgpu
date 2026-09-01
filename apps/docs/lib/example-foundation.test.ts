@@ -40,6 +40,7 @@ import {
 } from './examples-metadata';
 import { adaptCanonicalSourceExport } from './examples-api/adapter-v1';
 import { generateExampleArtifacts } from './examples-api/artifact-generator';
+import { sourceSnapshotIdentity } from './examples-api/hashing';
 import ExampleDetailPage from '../app/[lang]/examples/[slug]/page';
 
 function sorted(values: readonly string[]) {
@@ -47,6 +48,10 @@ function sorted(values: readonly string[]) {
 }
 
 const docsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const exampleArtifactSet = generateExampleArtifacts(adaptCanonicalSourceExport(exampleSources, {
+  repository: 'https://github.com/vgpu/vgpu',
+  gitCommit: sourceSnapshotIdentity('example-foundation-test\n'),
+}));
 
 function hasLink(node: ReactNode, href: string, label: string): boolean {
   if (!isValidElement(node)) return false;
@@ -167,29 +172,12 @@ test('generated metadata and files preserve the canonical and explicit order', (
 
 test('all thumbnail entries satisfy the internal contract and stay out of public source', async () => {
   expect(exampleSlugs).toHaveLength(24);
-  const latest = JSON.parse(
-    await readFile(
-      path.join(docsDir, 'generated/examples-api/examples/v1/latest.json'),
-      'utf8'
-    )
-  ) as { revision: string };
 
   for (const slug of exampleSlugs) {
     const directory = path.join(docsDir, 'examples', slug);
-    const [entrySource, rendererSource, manifestSource] = await Promise.all([
+    const [entrySource, rendererSource] = await Promise.all([
       readFile(path.join(directory, 'render-thumbnail.ts'), 'utf8'),
       readFile(path.join(directory, 'renderer.ts'), 'utf8'),
-      readFile(
-        path.join(
-          docsDir,
-          'generated/examples-api/examples/v1/revisions',
-          latest.revision,
-          'examples',
-          slug,
-          'manifest.json'
-        ),
-        'utf8'
-      ),
     ]);
     const sourceFile = ts.createSourceFile(
       `${slug}/render-thumbnail.ts`,
@@ -218,7 +206,11 @@ test('all thumbnail entries satisfy the internal contract and stay out of public
     expect(exampleSources[slug].files.map(({ path: file }) => file)).not.toContain(
       'render-thumbnail.ts'
     );
-    const manifest = JSON.parse(manifestSource) as {
+    const manifestArtifact = exampleArtifactSet.artifacts.find(({ key }) =>
+      key.endsWith(`/examples/${slug}/manifest.json`)
+    );
+    expect(manifestArtifact, `${slug} has no generated API manifest`).toBeDefined();
+    const manifest = JSON.parse(new TextDecoder().decode(manifestArtifact!.bytes)) as {
       files: Array<{ path: string }>;
     };
     expect(manifest.files.map(({ path: file }) => file)).not.toContain(
