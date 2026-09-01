@@ -48,10 +48,35 @@ const DISP_SIZE = 64;
 const DISP_COLS = 8;
 const DISP_ROWS = 8;
 
-const { bakeGlow, bakeSurfaceA, bakeSurfaceB, bakeDisplacement, bakeMicroDetail, bakeSharpDetail } = tslExports(
-  lavaModule,
-  ["bakeGlow", "bakeSurfaceA", "bakeSurfaceB", "bakeDisplacement", "bakeMicroDetail", "bakeSharpDetail"]
-);
+type PositionAndTimeInputs = {
+  position: Node;
+  t: Node;
+};
+
+type LavaBakeExports = {
+  bakeGlow: PositionAndTimeInputs;
+  bakeSurfaceA: PositionAndTimeInputs;
+  bakeSurfaceB: PositionAndTimeInputs;
+  bakeDisplacement: PositionAndTimeInputs;
+  bakeMicroDetail: { tileUv: Node };
+  bakeSharpDetail: { tileUv: Node };
+};
+
+const {
+  bakeGlow,
+  bakeSurfaceA,
+  bakeSurfaceB,
+  bakeDisplacement,
+  bakeMicroDetail,
+  bakeSharpDetail,
+} = tslExports<LavaBakeExports>(lavaModule, [
+  "bakeGlow",
+  "bakeSurfaceA",
+  "bakeSurfaceB",
+  "bakeDisplacement",
+  "bakeMicroDetail",
+  "bakeSharpDetail",
+]);
 
 export interface LavaFieldVolumes {
   /** x = sqrt(heat/1.6) sans seep, y = melt mask, z = pulse phase, w = sqrt(fringe/1.4). */

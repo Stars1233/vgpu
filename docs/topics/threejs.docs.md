@@ -81,11 +81,22 @@ Pass the complete `.wgsl` import to `tslExports()` and request the authored expo
 <!-- test:three-tsl-material -->
 ```ts
 import * as THREE from "three/webgpu";
+import type { Node } from "three/webgpu";
 import { positionLocal, time } from "three/tsl";
 import { tslExports } from "vgpu/three";
 import surfaceModule from "./surface.wgsl";
 
-const { surfaceColor, surfaceRoughness } = tslExports(
+type SurfaceInputs = {
+  position: Node;
+  timeSeconds: Node | number;
+};
+
+type SurfaceExports = {
+  surfaceColor: SurfaceInputs;
+  surfaceRoughness: SurfaceInputs;
+};
+
+const { surfaceColor, surfaceRoughness } = tslExports<SurfaceExports>(
   surfaceModule,
   ["surfaceColor", "surfaceRoughness"],
 );
@@ -106,40 +117,11 @@ Request functions that share a material in one `tslExports()` call. The adapter 
 
 ## Add a manual TypeScript contract
 
-The names array gives the returned object typed properties, but a normal `.wgsl` import does not carry a file-specific TypeScript signature. By default, each callable therefore accepts a named object of Three nodes or numbers.
+The names array gives the returned object typed properties, but a normal `.wgsl` import does not carry a file-specific TypeScript signature. By default, each callable therefore accepts any named object of Three nodes or numbers.
 
-When parameter-key checking is useful, describe the selected exports with a generic:
+Defining a manual contract next to each `tslExports()` call, as in the primary example above, is the recommended practice for application code and examples. TypeScript then checks selected names and input objects against the contract you wrote. For example, omitting `timeSeconds` from the `surfaceColor()` call above becomes a type error.
 
-<!-- test:three-tsl-manual-contract -->
-```ts
-import type { Node } from "three/webgpu";
-import { positionLocal, time } from "three/tsl";
-import { tslExports } from "vgpu/three";
-import surfaceModule from "./surface.wgsl";
-
-type SurfaceExports = {
-  surfaceColor: {
-    position: Node;
-    timeSeconds: Node | number;
-  };
-  surfaceRoughness: {
-    position: Node;
-    timeSeconds: Node | number;
-  };
-};
-
-const { surfaceColor } = tslExports<SurfaceExports>(
-  surfaceModule,
-  ["surfaceColor", "surfaceRoughness"],
-);
-
-surfaceColor({ position: positionLocal, timeSeconds: time });
-
-// @ts-expect-error — timeSeconds is required by the manual contract.
-surfaceColor({ position: positionLocal });
-```
-
-This checks export names, required parameter keys, and whichever Three types you write in the contract. Keep the contract keys exactly equal to the names requested in the same call; TypeScript rejects unknown selected names but cannot prove that the array contains every contract key. The contract is a manual assertion: TypeScript does not read WGSL contents, and Three's general `Node` type does not prove WGSL distinctions such as `f32` versus `vec3f`. The shader artifact and Three's shader builder remain the runtime authorities.
+The contract is a compile-time assertion; TypeScript does not compare it with the WGSL. Keep its keys exactly equal to the `names` selection and keep both aligned with the shader declarations. TypeScript rejects a selected name outside the contract, but it cannot prove that every contract key was selected or that a contract name exists in the shader. Three's general `Node` type also does not prove WGSL distinctions such as `f32` versus `vec3f`. The shader artifact and Three's shader builder remain the runtime authorities.
 
 ## Keep the complete artifact
 
@@ -187,6 +169,8 @@ Errors thrown later by Three while building a material are left unchanged.
 Start with the [`tslExports` example](/examples/tsl-exports). Its source is intentionally small: one leaf WGSL module, one direct export, one `tslExports()` call, and one `MeshPhysicalNodeMaterial`.
 
 The advanced [WGSL in three.js example](/examples/three-tsl) uses the same adapter for a larger set of material inputs and for functions that pre-bake field volumes.
+
+Both examples keep a manual TypeScript contract beside each `tslExports()` call. Follow that pattern when adding or changing WGSL exports so TypeScript checks selections and input objects against the nearby contract; keep the contract aligned with the shader, which remains the runtime authority.
 
 In a checkout of this repository:
 

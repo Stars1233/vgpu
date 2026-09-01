@@ -109,7 +109,7 @@ so harness screenshots match the on-screen image only on the post path
   `{ version: 1, wgsl, functionExports }` artifact. `functionExports` preserves
   authored export and parameter names while mapping each export to its final
   `resolvedName`, so identifier minification remains safe.
-- `tslExports(lavaModule, ["lavaGlow", "blackbody"])` selects exports by their
+- `tslExports<LavaExports>(lavaModule, ["lavaGlow", "blackbody"])` selects exports by their
   authored names, reads their final signatures, and emits a `wgslFn` forwarding
   wrapper for each one. All wrappers share one `wgsl()` include for the module.
 - The returned nodes are callable with inputs keyed by WGSL parameter names.
@@ -117,10 +117,20 @@ so harness screenshots match the on-screen image only on the post path
   `@group/@binding` layout when it builds the shader:
 
 ```ts
+import type { Node } from "three/webgpu";
+import { positionLocal, time, uniform } from "three/tsl";
 import { tslExports } from "vgpu/three";
 import lavaModule from "./lava.wgsl";
 
-const { lavaGlow, blackbody } = tslExports(lavaModule, ["lavaGlow", "blackbody"]);
+type LavaExports = {
+  lavaGlow: { position: Node; t: Node };
+  blackbody: { t: Node };
+};
+
+const { lavaGlow, blackbody } = tslExports<LavaExports>(lavaModule, [
+  "lavaGlow",
+  "blackbody",
+]);
 const glowIntensity = uniform(2.4);
 material.emissiveNode = blackbody({ t: lavaGlow({ position: positionLocal, t: time }).x }).mul(glowIntensity);
 ```

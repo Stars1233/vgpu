@@ -23,7 +23,15 @@ import {
   type LavaFieldVolumes,
 } from "./bake-lava.ts";
 
-const { blackbody, perlin3 } = tslExports(lavaModule, ["blackbody", "perlin3"]);
+type LavaMaterialExports = {
+  blackbody: { t: Node };
+  perlin3: { position: Node };
+};
+
+const { blackbody, perlin3 } = tslExports<LavaMaterialExports>(lavaModule, [
+  "blackbody",
+  "perlin3",
+]);
 
 export interface LavaMaterialOptions {
   /** Pre-baked field volumes from `bakeLavaVolumes`. */

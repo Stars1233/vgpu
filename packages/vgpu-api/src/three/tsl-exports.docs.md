@@ -66,11 +66,22 @@ declare function tslExports<Contract extends TslContractShape<Contract>>(
 ## Example
 
 ```ts
+import type { Node } from "three/webgpu";
 import { float, positionLocal } from "three/tsl";
 import { tslExports } from "vgpu/three";
 import surfaceModule from "./surface.wgsl";
 
-const { surfaceColor } = tslExports(surfaceModule, ["surfaceColor"]);
+type SurfaceExports = {
+  surfaceColor: {
+    position: Node;
+    timeSeconds: Node | number;
+  };
+};
+
+const { surfaceColor } = tslExports<SurfaceExports>(
+  surfaceModule,
+  ["surfaceColor"],
+);
 
 const colorNode = surfaceColor({
   position: positionLocal,
@@ -82,37 +93,9 @@ Identifier minification is fully supported when you pass the complete imported o
 
 ## Manual TypeScript contract
 
-The default overload infers the returned property names but accepts any named `Node | number` inputs. Supply a contract when you also want TypeScript to check function names and required parameter keys:
+The default overload infers the returned property names but accepts any named `Node | number` inputs. For application code, prefer the manual contract shown above. The typed overload constrains each selected name to a contract key and each callable's input object to the corresponding contract value. Omitting `timeSeconds` from the example's `surfaceColor()` call, for instance, becomes a type error.
 
-```ts
-import type { Node } from "three/webgpu";
-import { positionLocal, time } from "three/tsl";
-import { tslExports } from "vgpu/three";
-import surfaceModule from "./surface.wgsl";
-
-type SurfaceExports = {
-  surfaceColor: {
-    position: Node;
-    timeSeconds: Node | number;
-  };
-  surfaceRoughness: {
-    position: Node;
-    timeSeconds: Node | number;
-  };
-};
-
-const { surfaceColor } = tslExports<SurfaceExports>(
-  surfaceModule,
-  ["surfaceColor", "surfaceRoughness"],
-);
-
-surfaceColor({ position: positionLocal, timeSeconds: time });
-
-// @ts-expect-error — timeSeconds is required by the manual contract.
-surfaceColor({ position: positionLocal });
-```
-
-The contract is a compile-time assertion maintained by the application; it is not generated from the WGSL. Keep its keys exactly equal to the `names` selection. TypeScript rejects a selected name outside the contract, but cannot prove that the array contains every contract key. At runtime, the shader artifact remains authoritative for export identity and authored parameter names. Three's `Node` type is not branded by WGSL value type, so this checks names and the manually chosen TypeScript value types rather than proving `f32` versus `vec3f` compatibility.
+The contract is a compile-time assertion maintained by the application; it is not generated from or compared with the WGSL. Keep its keys exactly equal to the `names` selection and keep both aligned with the shader declarations. TypeScript rejects a selected name outside the contract, but cannot prove that every contract key was selected or that a contract name exists in the shader. At runtime, the shader artifact remains authoritative for export identity and authored parameter names. Three's `Node` type is not branded by WGSL value type, so the manually chosen value types do not prove `f32` versus `vec3f` compatibility.
 
 ## Notes
 
