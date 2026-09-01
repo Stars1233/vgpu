@@ -1641,9 +1641,9 @@ export const exampleSources = {
       }
     ]
   },
-  "three-tsl-basic": {
-    "slug": "three-tsl-basic",
-    "title": "WGSL to Three.js TSL",
+  "tsl-exports": {
+    "slug": "tsl-exports",
+    "title": "tslExports",
     "description": "Turn one exported WGSL function into a callable Three.js TSL node and use it on a physical material.",
     "tags": [
       "3d",

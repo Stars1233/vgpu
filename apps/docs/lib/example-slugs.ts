@@ -21,7 +21,7 @@ export const exampleSlugs = [
   'depth-estimation',
   'mnist-classifier',
   'air-painting',
-  'three-tsl-basic',
+  'tsl-exports',
   'three-tsl',
 ] as const;
 

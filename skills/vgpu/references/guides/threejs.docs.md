@@ -186,7 +186,7 @@ Errors thrown later by Three while building a material are left unchanged.
 
 ## Try the examples
 
-Start with [WGSL to Three.js TSL](/examples/three-tsl-basic). Its source is intentionally small: one leaf WGSL module, one direct export, one `tslExports()` call, and one `MeshPhysicalNodeMaterial`.
+Start with the [`tslExports` example](/examples/tsl-exports). Its source is intentionally small: one leaf WGSL module, one direct export, one `tslExports()` call, and one `MeshPhysicalNodeMaterial`.
 
 The advanced [WGSL in three.js example](/examples/three-tsl) uses the same adapter for a larger set of material inputs and for functions that pre-bake field volumes.
 
@@ -202,5 +202,5 @@ pnpm --filter @vgpu/example-three-tsl dev
 - [`tslExports` API reference](/reference/vgpu-three/tsl-exports#tslexports) — signature, accepted sources, return value, and error contract.
 - [WGSL modules](/concepts/wgsl-modules) — imports, direct exports, purity, mangling, and graph emission.
 - [Using vgpu with Next.js and other bundlers](nextjs.docs.md) — webpack, Turbopack, Vite, and `.wgsl` TypeScript setup.
-- [WGSL to Three.js TSL](/examples/three-tsl-basic) — the smallest working adapter example.
+- [`tslExports`](/examples/tsl-exports) — the smallest working adapter example.
 - [WGSL in three.js](/examples/three-tsl) — a complete material and baking workflow.

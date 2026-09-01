@@ -24,7 +24,7 @@ import { meta as nextjsFlareMeta } from '../examples/nextjs-flare/meta';
 import { meta as depthEstimationMeta } from '../examples/depth-estimation/meta';
 import { meta as mnistClassifierMeta } from '../examples/mnist-classifier/meta';
 import { meta as airPaintingMeta } from '../examples/air-painting/meta';
-import { meta as threeTslBasicMeta } from '../examples/three-tsl-basic/meta';
+import { meta as tslExportsMeta } from '../examples/tsl-exports/meta';
 import { meta as threeTslMeta } from '../examples/three-tsl/meta';
 
 const rawMetadata = {
@@ -50,7 +50,7 @@ const rawMetadata = {
   'depth-estimation': depthEstimationMeta,
   'mnist-classifier': mnistClassifierMeta,
   'air-painting': airPaintingMeta,
-  'three-tsl-basic': threeTslBasicMeta,
+  'tsl-exports': tslExportsMeta,
   'three-tsl': threeTslMeta,
 } satisfies Record<ExampleSlug, ExampleMetaDefinition>;
 
@@ -85,7 +85,7 @@ export const exampleMetadataBySlug = {
   'depth-estimation': withThumbnails(rawMetadata['depth-estimation']),
   'mnist-classifier': withThumbnails(rawMetadata['mnist-classifier']),
   'air-painting': withThumbnails(rawMetadata['air-painting']),
-  'three-tsl-basic': withThumbnails(rawMetadata['three-tsl-basic']),
+  'tsl-exports': withThumbnails(rawMetadata['tsl-exports']),
   'three-tsl': withThumbnails(rawMetadata['three-tsl']),
 } satisfies Record<ExampleSlug, ExampleMeta>;
 

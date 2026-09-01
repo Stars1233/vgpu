@@ -30,7 +30,7 @@ export const exampleComponentLoaders = {
   'depth-estimation': () => import('../examples/depth-estimation/index'),
   'mnist-classifier': () => import('../examples/mnist-classifier/index'),
   'air-painting': () => import('../examples/air-painting/index'),
-  'three-tsl-basic': () => import('../examples/three-tsl-basic/index'),
+  'tsl-exports': () => import('../examples/tsl-exports/index'),
   'three-tsl': () => import('../examples/three-tsl/index'),
 } satisfies Record<ExampleSlug, ExampleComponentLoader>;
 

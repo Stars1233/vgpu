@@ -31,9 +31,9 @@ vi.mock('@/lib/site', () => ({
 
 import { exampleComponentLoaders } from './example-components';
 import type { ExampleRenderer, RenderSize } from './example-renderer';
-import { exampleSlugs } from './example-slugs';
+import { exampleSlugs, isExampleSlug } from './example-slugs';
 import { exampleSources } from './examples-source.generated';
-import { exampleMetadataBySlug } from './examples-metadata';
+import { exampleMetadataBySlug, getExampleMetadata } from './examples-metadata';
 import { adaptCanonicalSourceExport } from './examples-api/adapter-v1';
 import { generateExampleArtifacts } from './examples-api/artifact-generator';
 import ExampleDetailPage from '../app/[lang]/examples/[slug]/page';
@@ -61,6 +61,17 @@ function hasElementType(node: ReactNode, type: string): boolean {
     ? props.children.some((child) => hasElementType(child, type))
     : hasElementType(props.children, type);
 }
+
+test('focused Three adapter example is published as tsl-exports', () => {
+  expect(isExampleSlug('tsl-exports')).toBe(true);
+  expect(isExampleSlug('three-tsl-basic')).toBe(false);
+  expect(getExampleMetadata('tsl-exports')).toMatchObject({
+    slug: 'tsl-exports',
+    title: 'tslExports',
+    guide: '/docs/guides/threejs',
+  });
+  expect(exampleComponentLoaders).toHaveProperty('tsl-exports');
+});
 
 test('example detail keeps its actions and renders a guide CTA only when declared', async () => {
   const three = await ExampleDetailPage({

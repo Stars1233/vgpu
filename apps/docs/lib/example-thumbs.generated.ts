@@ -90,10 +90,6 @@ export const exampleThumbs: Record<string, ExampleThumbPresence> = {
     "card": "/examples/three-tsl.card.png",
     "hero": "/examples/three-tsl.hero.png"
   },
-  "three-tsl-basic": {
-    "card": "/examples/three-tsl-basic.card.png",
-    "hero": "/examples/three-tsl-basic.hero.png"
-  },
   "transmission": {
     "card": "/examples/transmission.card.png",
     "hero": "/examples/transmission.hero.png"
@@ -101,5 +97,9 @@ export const exampleThumbs: Record<string, ExampleThumbPresence> = {
   "triangle-led-front": {
     "card": "/examples/triangle-led-front.card.png",
     "hero": "/examples/triangle-led-front.hero.png"
+  },
+  "tsl-exports": {
+    "card": "/examples/tsl-exports.card.png",
+    "hero": "/examples/tsl-exports.hero.png"
   }
 };
