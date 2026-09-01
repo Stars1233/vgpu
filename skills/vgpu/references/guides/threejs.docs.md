@@ -170,7 +170,7 @@ Errors thrown later by Three while building a material are left unchanged.
 
 Start with [Three.js WGSL modules](/examples/tsl-exports). Its source is intentionally small: one leaf WGSL module, one direct export, one `tslExports()` call, and one `MeshPhysicalNodeMaterial`.
 
-The advanced [Lava material with Three.js](/examples/three-tsl) example uses the same adapter for a larger set of material inputs and for functions that pre-bake field volumes.
+The advanced [Lava material](/examples/three-tsl) example uses the same adapter for a larger set of material inputs and for functions that pre-bake field volumes.
 
 Both examples keep a manual TypeScript contract beside each `tslExports()` call. Follow that pattern when adding or changing WGSL exports so TypeScript checks selections and input objects against the nearby contract; keep the contract aligned with the shader, which remains the runtime authority.
 
@@ -187,4 +187,4 @@ pnpm --filter @vgpu/example-three-tsl dev
 - [WGSL modules](/concepts/wgsl-modules) — imports, direct exports, purity, mangling, and graph emission.
 - [Using vgpu with Next.js and other bundlers](nextjs.docs.md) — webpack, Turbopack, Vite, and `.wgsl` TypeScript setup.
 - [Three.js WGSL modules](/examples/tsl-exports) — the smallest working adapter example.
-- [Lava material with Three.js](/examples/three-tsl) — a complete material and baking workflow.
+- [Lava material](/examples/three-tsl) — a complete material and baking workflow.

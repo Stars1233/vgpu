@@ -1676,7 +1676,7 @@ export const exampleSources = {
   },
   "three-tsl": {
     "slug": "three-tsl",
-    "title": "Lava material with Three.js",
+    "title": "Lava material",
     "description": "Author a procedural lava material as plain WGSL modules and wire them into a three.js node material — twelve surface slots, all driven from shader source.",
     "tags": [
       "three",

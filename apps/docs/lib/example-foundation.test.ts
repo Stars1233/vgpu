@@ -83,7 +83,7 @@ test('Three examples publish stable slugs with descriptive titles', () => {
   }).toEqual({
     advanced: {
       slug: 'three-tsl',
-      title: 'Lava material with Three.js',
+      title: 'Lava material',
       guide: '/docs/guides/threejs',
     },
     focused: {
