@@ -1643,9 +1643,10 @@ export const exampleSources = {
   },
   "tsl-exports": {
     "slug": "tsl-exports",
-    "title": "tslExports",
+    "title": "Three.js WGSL modules",
     "description": "Turn one exported WGSL function into a callable Three.js TSL node and use it on a physical material.",
     "tags": [
+      "three",
       "3d",
       "shader",
       "rendering"
@@ -1675,9 +1676,10 @@ export const exampleSources = {
   },
   "three-tsl": {
     "slug": "three-tsl",
-    "title": "WGSL in three.js",
+    "title": "Lava material with Three.js",
     "description": "Author a procedural lava material as plain WGSL modules and wire them into a three.js node material — twelve surface slots, all driven from shader source.",
     "tags": [
+      "three",
       "3d",
       "shader",
       "lighting",

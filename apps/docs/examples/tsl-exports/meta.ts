@@ -1,9 +1,9 @@
 export const meta = {
   slug: "tsl-exports",
-  title: "tslExports",
+  title: "Three.js WGSL modules",
   description:
     "Turn one exported WGSL function into a callable Three.js TSL node and use it on a physical material.",
-  tags: ["3d", "shader", "rendering"],
+  tags: ["three", "3d", "shader", "rendering"],
   guide: "/docs/guides/threejs",
   capabilities: ["webgpu", "continuous-rendering", "responsive-canvas"],
   thumb: { time: 2.4 },

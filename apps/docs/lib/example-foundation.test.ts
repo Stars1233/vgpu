@@ -33,7 +33,11 @@ import { exampleComponentLoaders } from './example-components';
 import type { ExampleRenderer, RenderSize } from './example-renderer';
 import { exampleSlugs, isExampleSlug } from './example-slugs';
 import { exampleSources } from './examples-source.generated';
-import { exampleMetadataBySlug, getExampleMetadata } from './examples-metadata';
+import {
+  exampleMetadataBySlug,
+  examplesMetadata,
+  getExampleMetadata,
+} from './examples-metadata';
 import { adaptCanonicalSourceExport } from './examples-api/adapter-v1';
 import { generateExampleArtifacts } from './examples-api/artifact-generator';
 import ExampleDetailPage from '../app/[lang]/examples/[slug]/page';
@@ -62,15 +66,41 @@ function hasElementType(node: ReactNode, type: string): boolean {
     : hasElementType(props.children, type);
 }
 
-test('focused Three adapter example is published as tsl-exports', () => {
-  expect(isExampleSlug('tsl-exports')).toBe(true);
-  expect(isExampleSlug('three-tsl-basic')).toBe(false);
-  expect(getExampleMetadata('tsl-exports')).toMatchObject({
-    slug: 'tsl-exports',
-    title: 'tslExports',
-    guide: '/docs/guides/threejs',
+test('Three examples publish stable slugs with descriptive titles', () => {
+  const summary = (slug: string) => {
+    const metadata = getExampleMetadata(slug);
+    return metadata && {
+      slug: metadata.slug,
+      title: metadata.title,
+      guide: metadata.guide,
+    };
+  };
+
+  expect({
+    advanced: summary('three-tsl'),
+    focused: summary('tsl-exports'),
+    retiredBasicSlug: isExampleSlug('three-tsl-basic'),
+  }).toEqual({
+    advanced: {
+      slug: 'three-tsl',
+      title: 'Lava material with Three.js',
+      guide: '/docs/guides/threejs',
+    },
+    focused: {
+      slug: 'tsl-exports',
+      title: 'Three.js WGSL modules',
+      guide: '/docs/guides/threejs',
+    },
+    retiredBasicSlug: false,
   });
-  expect(exampleComponentLoaders).toHaveProperty('tsl-exports');
+});
+
+test('the three tag includes both Three.js examples in catalog filtering', () => {
+  const matches = examplesMetadata
+    .filter((example) => example.tags.includes('three'))
+    .map((example) => example.slug);
+
+  expect(matches).toEqual(expect.arrayContaining(['three-tsl', 'tsl-exports']));
 });
 
 test('example detail keeps its actions and renders a guide CTA only when declared', async () => {

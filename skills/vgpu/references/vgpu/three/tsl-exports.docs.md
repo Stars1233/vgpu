@@ -111,4 +111,4 @@ The contract is a compile-time assertion maintained by the application; it is no
 - Functions must be pure, have no shader-stage attribute, receive values through parameters, and return a value.
 - Without a manual `Contract`, TypeScript infers requested export keys but not WGSL parameter names or WGSL value and return types.
 - Match thrown values by `.code`; the adapter does not export an error class.
-- **See also:** [Use WGSL modules in three.js TSL](/guides/threejs), the [`tslExports` example](/examples/tsl-exports), `ShaderSource`, and `resolveShader`.
+- **See also:** [Use WGSL modules in three.js TSL](/guides/threejs), [Three.js WGSL modules](/examples/tsl-exports), `ShaderSource`, and `resolveShader`.
