@@ -1,5 +1,6 @@
 import { assertNoErrorDiagnostics } from "../loader-shared/diagnostics.ts";
 import { shaderSourceModule } from "../loader-shared/emit.ts";
+import { hasDirectFunctionExport, singleSourceModule } from "../loader-shared/source.ts";
 import { wgslError } from "../runtime/errors.ts";
 import { applyMinifyWgsl, type MinifyOption } from "../runtime/minify.ts";
 import { reservedIdentifierDiagnosticsForSource } from "../runtime/reserved-identifiers.ts";
@@ -19,11 +20,13 @@ type LoaderContext = {
 
 export default function wgslWebpackLoader(this: LoaderContext, source: string): string | void {
   const options = readOptions(this);
-  if (!hasTopLevelImport(source)) {
-    // A leaf .wgsl can be a legitimate entry that declares bindings, so the
+  const path = this.resourcePath ?? "<webpack>";
+  const hasImports = hasTopLevelImport(source);
+  const exportedLeaf = !hasImports && hasDirectFunctionExport(source, path);
+  if (!hasImports && !exportedLeaf) {
+    // An ordinary leaf .wgsl can be a legitimate entry that declares bindings, so the
     // entry-only module-purity rule is intentionally enforced only when an
     // importer resolves a graph through resolveShader().
-    const path = this.resourcePath ?? "<webpack>";
     assertNoErrorDiagnostics(reservedIdentifierDiagnosticsForSource(path, source), path);
     const wgsl = applyMinifyWgsl(source, options.minify);
     return shaderSourceModule(wgsl);
@@ -31,16 +34,17 @@ export default function wgslWebpackLoader(this: LoaderContext, source: string): 
   const done = this.async?.();
   const run = async () => {
     const resolved = await resolveShader({
-      entry: this.resourcePath ?? "<webpack>",
+      entry: path,
       validate: false,
       minify: options.minify,
+      ...(exportedLeaf ? { modules: singleSourceModule(path, source) } : {}),
       // Register each import as soon as it is discovered so a failed resolution remains watchable.
       onDependency: (dep) => this.addDependency?.(dep),
     });
-    assertNoErrorDiagnostics(resolved.diagnostics, this.resourcePath ?? "<webpack>");
-    return shaderSourceModule(resolved.wgsl);
+    assertNoErrorDiagnostics(resolved.diagnostics, path);
+    return shaderSourceModule(resolved.wgsl, resolved.functionExports);
   };
-  if (!done) throw wgslError("VGPU-WGSL-RUNTIME-IMPORT", "@vgpu/wgsl webpack loader requires asynchronous mode for imports.");
+  if (!done) throw wgslError("VGPU-WGSL-RUNTIME-IMPORT", "@vgpu/wgsl webpack loader requires asynchronous mode for imports or direct exports.");
   run().then((code) => done(null, code), (error: unknown) => done(error instanceof Error ? error : new Error(String(error))));
 }
 

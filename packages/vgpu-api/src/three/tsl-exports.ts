@@ -1,0 +1,85 @@
+import type { Node } from "three/webgpu";
+import { nodeObject, wgsl, wgslFn } from "three/tsl";
+import type { ShaderNodeObject } from "three/tsl";
+import { adapterError } from "./errors.ts";
+import { readFunctionSignature } from "./function-signature.ts";
+import { assertPrivateNamespaceAvailable, privateNamespacePrefix } from "./private-namespace.ts";
+import { selectFunction, type TslExportsSource } from "./source-exports.ts";
+
+type TslInputs = Readonly<Record<string, Node | number>>;
+type TslCallable = (inputs: TslInputs) => ShaderNodeObject<Node>;
+type PositionalWgslFn = (...inputs: (Node | number)[]) => ShaderNodeObject<Node>;
+type TslContractShape<Contract> = Readonly<{
+  [Name in keyof Contract]: TslInputs;
+}>;
+type TslFunctions<Contract extends TslContractShape<Contract>> = {
+  readonly [Name in keyof Contract]: (
+    inputs: Contract[Name],
+  ) => ShaderNodeObject<Node>;
+};
+
+let nextWrapperId = 0;
+
+export function tslExports<const Names extends readonly string[]>(
+  source: TslExportsSource,
+  names: Names,
+): {
+  readonly [Name in Names[number]]: (
+    inputs: TslInputs,
+  ) => ShaderNodeObject<Node>;
+};
+export function tslExports<Contract extends TslContractShape<Contract>>(
+  source: TslExportsSource,
+  names: readonly (keyof Contract & string)[],
+): TslFunctions<Contract>;
+export function tslExports(
+  source: TslExportsSource,
+  names: readonly string[],
+): Record<string, TslCallable> {
+  const moduleWgsl = typeof source === "string" ? source : source.wgsl;
+  assertPrivateNamespaceAvailable(moduleWgsl);
+  const include = wgsl(moduleWgsl);
+  const allocateWrapperName = wrapperNameAllocator(moduleWgsl);
+  const result = Object.create(null) as Record<string, TslCallable>;
+
+  for (const name of names) {
+    const selected = selectFunction(source, name);
+    const signature = readFunctionSignature(
+      moduleWgsl,
+      selected.resolvedName,
+      typeof source !== "string" && "functionExports" in source,
+    );
+    if (signature.parameters.length !== selected.parameterNames.length) {
+      throw adapterError(
+        "VGPU-THREE-TSL-SOURCE-INVALID",
+        `Export metadata for ${name} has ${selected.parameterNames.length} parameters but ${selected.resolvedName} declares ${signature.parameters.length}.`,
+      );
+    }
+
+    const positionalNames = signature.parameters.map((_, index) => `${privateNamespacePrefix}arg_${index}`);
+    const call = `${signature.name}(${positionalNames.join(", ")})`;
+    const parameters = signature.parameters
+      .map((parameter, index) => `${positionalNames[index]}: ${parameter.type}`)
+      .join(", ");
+    const wrapper = `fn ${allocateWrapperName()}(${parameters}) -> ${signature.returnType} { return ${call}; }`;
+    const positional = wgslFn(wrapper, [include]) as unknown as PositionalWgslFn;
+    result[name] = (inputs) => positional(
+      ...selected.parameterNames.map((parameterName) => nodeObject(inputs[parameterName])),
+    );
+  }
+
+  return result;
+}
+
+function wrapperNameAllocator(source: string): () => string {
+  const unavailable = new Set(source.match(/[A-Za-z_][A-Za-z0-9_]*/g) ?? []);
+
+  return () => {
+    let candidate: string;
+    do {
+      candidate = `${privateNamespacePrefix}${nextWrapperId++}`;
+    } while (unavailable.has(candidate));
+    unavailable.add(candidate);
+    return candidate;
+  };
+}

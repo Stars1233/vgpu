@@ -39,7 +39,7 @@ declare function wgslVitePlugin(options?: WgslVitePluginOptions): {
 | Param | Type | Required | Default | Notes |
 |---|---|---|---|---|
 | options.minify | `boolean | MinifyOptions` | ✖ | `false` | Shared plugin/transform minify option. `true` means `{ whitespace: true, identifiers: "safe" }`; object form defaults to `{ whitespace: true, identifiers: "none" }`. |
-| source | string | ✔ | — | Raw WGSL file contents. Leaf files without top-level imports are emitted directly, optionally minified. |
+| source | string | ✔ | — | Raw WGSL file contents. Ordinary leaves without top-level imports or direct `export fn` declarations are emitted directly, optionally minified. Exported leaves and import graphs go through the resolver. |
 | id | string | ✔ | — | WGSL file id/path. Used as resolver entry for import graphs. Plugin transform ignores ids that do not end with `.wgsl`. |
 | opts.source | string | ✔ | — | Object-overload source field. |
 | opts.id | string | ✔ | — | Object-overload id field. |
@@ -76,9 +76,10 @@ console.log(result.map === null, result.code.includes("version"));
 
 ## Notes
 
-- Transform output default-exports `ShaderSource` v1: `{ version: 1, wgsl: "..." }`.
+- Transform output default-exports `ShaderSource` v1: `{ version: 1, wgsl: "...", functionExports: [...] }`. Every new artifact includes `functionExports`, including `[]`; property presence is authoritative for integrations that address direct exports.
 - `wgslVitePlugin()` only handles ids ending with `.wgsl`; use `transformWgsl()` directly for tests and non-Vite tooling.
 - Leaf shader transforms do not call `onDependency` because Vite already tracks the entry file. Imported graph transforms call it for transitive dependencies before loading them, including on resolution paths that later fail.
 - A leaf WGSL file may declare entry resources. Shared/imported modules must be pure: no `@group/@binding` outside the entry.
-- **The plugin never validates WGSL, in any mode, for either leaf files or import graphs.** It calls `resolveShader({ validate: false })` for imported graphs — parsing, purity checks, DCE, mangling, and optional minification still apply, but the device-backed `createShaderModule` check does not run. Leaf files (no imports) never call `resolveShader()` at all and are emitted directly, so they get no semantic processing beyond the raw text. There is no plugin option to opt into validation; a `validate` key in the plugin options is silently ignored. `vite build`/`vite dev` will happily compile and ship invalid WGSL. The validation gate is `npx vgpu check --require-validation <file>` — run it in CI or as a pre-commit hook; see `npx vgpu docs cat cli.docs.md`.
+- A leaf with a direct `export fn` goes through resolution even without imports: the author-only `export` marker is removed and the surviving function receives authored-to-final identity metadata. Ordinary leaves keep the byte-preserving fast path and emit `functionExports: []`.
+- **The plugin never validates WGSL, in any mode, for either leaf files or import graphs.** It calls `resolveShader({ validate: false })` for imported graphs and direct-export leaves — parsing, purity checks, DCE, mangling, and optional minification still apply, but the device-backed `createShaderModule` check does not run. Ordinary leaves with no imports or direct exports are emitted directly, so they receive no semantic processing beyond optional minification and reserved-identifier diagnostics. There is no plugin option to opt into validation; a `validate` key in the plugin options is silently ignored. `vite build`/`vite dev` will happily compile and ship invalid WGSL. The validation gate is `npx vgpu check --require-validation <file>` — run it in CI or as a pre-commit hook; see `npx vgpu docs cat cli.docs.md`.
 - **See also:** `ShaderSource`, `resolveShader`, `wgslWebpackLoader`, and the `nextjs` guide (`npx vgpu docs cat nextjs.md`) for the ambient `.d.ts` that types `.wgsl` imports.

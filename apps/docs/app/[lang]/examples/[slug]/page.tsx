@@ -66,7 +66,12 @@ const ExampleDetailPage = async ({ params }: ExampleDetailPageProps) => {
           <h1 className="font-medium! text-heading-32 text-gray-1000 tracking-tighter sm:text-heading-40">
             {example.meta.title}
           </h1>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 md:shrink-0">
+            {example.meta.guide ? (
+              <Button asChild size="sm" variant="outline">
+                <Link href={example.meta.guide}>Read guide</Link>
+              </Button>
+            ) : null}
             <Button asChild size="sm" variant="outline">
               <Link href={`/preview/${example.meta.slug}`}>Open fullscreen</Link>
             </Button>

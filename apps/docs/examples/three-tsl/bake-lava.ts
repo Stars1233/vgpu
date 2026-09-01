@@ -2,11 +2,11 @@ import * as THREE from "three/webgpu";
 import { Fn, float, mix, texture, uv, vec2, vec3 } from "three/tsl";
 import type { ShaderNodeObject } from "three/tsl";
 import type { Node } from "three/webgpu";
+import { tslExports } from "vgpu/three";
+import lavaModule from "./lava.wgsl";
 
 /** A TSL-wrapped node: the fluent object every three/tsl builder returns. */
 type TslNode = ShaderNodeObject<Node>;
-import lavaModule from "./lava.wgsl";
-import { tslExports } from "./wgsl-tsl";
 
 /**
  * Pre-baked field volumes for the lava material.

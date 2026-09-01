@@ -15,8 +15,8 @@ import {
 } from "three/tsl";
 import type { ShaderNodeObject } from "three/tsl";
 import type { Node } from "three/webgpu";
+import { tslExports } from "vgpu/three";
 import lavaModule from "./lava.wgsl";
-import { tslExports } from "./wgsl-tsl.ts";
 import {
   sampleDisplacementVolume,
   sampleFieldVolume,

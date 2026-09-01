@@ -132,6 +132,8 @@ test("exports the CLI reference to the docs corpus and skill", () => {
 
   const skill = buildSkill(docsManifest);
   expect(skill.get("SKILL.md")).toContain("## CLI reference");
+  expect(skill.get("SKILL.md")).toContain("## Guides");
+  expect(skill.get("SKILL.md")).not.toContain("## Performance guides");
   expect(skill.get("references/guides/cli.docs.md")).toContain("# CLI");
 });
 
@@ -182,7 +184,7 @@ test("concept guides preserve canonical title and numeric website order", () => 
 
   const router = buildSkill(manifest).get("SKILL.md");
   expect(router).toBeDefined();
-  const concepts = router?.slice(router.indexOf("## Core concepts"), router.indexOf("## Performance guides"));
+  const concepts = router?.slice(router.indexOf("## Core concepts"), router.indexOf("## Guides"));
   expect([...concepts?.matchAll(/^- \*\*([^*]+)\*\*/gmu) ?? []].map((match) => match[1])).toEqual([
     "Context", "Draws", "Compilation", "Effects", "Passes", "Frames", "Render bundles",
   ]);

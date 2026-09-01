@@ -3,21 +3,94 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import ts from 'typescript';
+import { isValidElement, type ReactNode } from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
+vi.mock('@vercel/geistdocs/components/button', () => ({
+  Button: ({ children }: { children: ReactNode }) => children,
+}));
+vi.mock('@/components/example-actions', () => ({
+  ExampleActions: 'example-actions',
+}));
+vi.mock('@/components/example-preview', () => ({ ExamplePreview: () => null }));
+vi.mock('@/components/example-source-viewer', () => ({ ExampleSourceViewer: () => null }));
+vi.mock('@/geistdocs', () => ({ translations: { en: {} } }));
+vi.mock('@/lib/example-actions', () => ({
+  buildExamplePrompt: () => 'example prompt',
+  buildV0OpenUrl: () => 'https://v0.dev/chat',
+}));
+vi.mock('@/lib/example-readme', () => ({
+  buildExampleSourceMarkdown: () => 'example source',
+}));
+vi.mock('@/lib/examples-registry', async () => import('./examples-registry'));
+vi.mock('@/lib/site', () => ({
+  SITE_OG_IMAGE_PATH: '/og.png',
+  siteUrl: (pathname: string) => pathname,
+}));
 
 import { exampleComponentLoaders } from './example-components';
 import type { ExampleRenderer, RenderSize } from './example-renderer';
 import { exampleSlugs } from './example-slugs';
 import { exampleSources } from './examples-source.generated';
 import { exampleMetadataBySlug } from './examples-metadata';
+import { adaptCanonicalSourceExport } from './examples-api/adapter-v1';
+import { generateExampleArtifacts } from './examples-api/artifact-generator';
+import ExampleDetailPage from '../app/[lang]/examples/[slug]/page';
 
 function sorted(values: readonly string[]) {
   return [...values].sort();
 }
 
 const docsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+function hasLink(node: ReactNode, href: string, label: string): boolean {
+  if (!isValidElement(node)) return false;
+  const props = node.props as { children?: ReactNode; href?: unknown };
+  if (props.href === href && props.children === label) return true;
+  return Array.isArray(props.children)
+    ? props.children.some((child) => hasLink(child, href, label))
+    : hasLink(props.children, href, label);
+}
+
+function hasElementType(node: ReactNode, type: string): boolean {
+  if (!isValidElement(node)) return false;
+  if (node.type === type) return true;
+  const props = node.props as { children?: ReactNode };
+  return Array.isArray(props.children)
+    ? props.children.some((child) => hasElementType(child, type))
+    : hasElementType(props.children, type);
+}
+
+test('example detail keeps its actions and renders a guide CTA only when declared', async () => {
+  const three = await ExampleDetailPage({
+    params: Promise.resolve({ lang: 'en', slug: 'three-tsl' }),
+  });
+  const gradient = await ExampleDetailPage({
+    params: Promise.resolve({ lang: 'en', slug: 'gradient' }),
+  });
+
+  expect(hasLink(three, '/docs/guides/threejs', 'Read guide')).toBe(true);
+  expect(hasLink(gradient, '/docs/guides/threejs', 'Read guide')).toBe(false);
+  expect(hasLink(three, '/preview/three-tsl', 'Open fullscreen')).toBe(true);
+  expect(hasElementType(three, 'example-actions')).toBe(true);
+  expect(hasElementType(gradient, 'example-actions')).toBe(true);
+});
+
+test('Three guide metadata stays internal to the docs site', () => {
+  expect(exampleMetadataBySlug['three-tsl'].guide).toBe('/docs/guides/threejs');
+  expect(exampleSources['three-tsl']).not.toHaveProperty('guide');
+
+  const graph = adaptCanonicalSourceExport(
+    { 'three-tsl': exampleSources['three-tsl'] },
+    { repository: 'https://github.com/vgpu/vgpu', gitCommit: 'site-only-guide-test' },
+  );
+  const manifest = generateExampleArtifacts(graph).artifacts.find((artifact) =>
+    artifact.key.endsWith('/examples/three-tsl/manifest.json')
+  );
+  expect(manifest).toBeDefined();
+  expect(JSON.parse(new TextDecoder().decode(manifest!.bytes))).not.toHaveProperty('guide');
+});
 
 test('canonical, metadata, generated source, and component registries cover exactly the same slugs', () => {
   const canonical = sorted(exampleSlugs);
@@ -52,7 +125,7 @@ test('generated metadata and files preserve the canonical and explicit order', (
 });
 
 test('all thumbnail entries satisfy the internal contract and stay out of public source', async () => {
-  expect(exampleSlugs).toHaveLength(23);
+  expect(exampleSlugs).toHaveLength(24);
   const latest = JSON.parse(
     await readFile(
       path.join(docsDir, 'generated/examples-api/examples/v1/latest.json'),

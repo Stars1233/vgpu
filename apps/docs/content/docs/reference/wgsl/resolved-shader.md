@@ -6,15 +6,29 @@ description: "Data shapes returned or consumed by the WGSL helpers. Use `Resolve
 ## Import
 
 ```ts
-import type { ResolvedShader, ShaderSource, SourceMap, WGSLAst, WGSLSource } from "@vgpu/wgsl";
+import type {
+  ResolvedShader,
+  ShaderFunctionExport,
+  ShaderSource,
+  SourceMap,
+  WGSLAst,
+  WGSLSource,
+} from "@vgpu/wgsl";
 ```
 
 ## Signature
 
 ```ts
+interface ShaderFunctionExport {
+  readonly name: string;
+  readonly resolvedName: string;
+  readonly parameterNames: readonly string[];
+}
+
 interface ShaderSource {
   readonly version: 1;
   readonly wgsl: string;
+  readonly functionExports?: readonly ShaderFunctionExport[];
 }
 
 interface WGSLSource {
@@ -71,6 +85,15 @@ interface ResolvedShader {
 |---|---|---|---|---|
 | version | `1` | ✔ | — | Loader artifact version. |
 | wgsl | string | ✔ | — | Plain WGSL emitted by a loader or resolver. |
+| functionExports | `readonly ShaderFunctionExport[]` | ✖ for legacy producers | absent | Authoritative identity for surviving direct `export fn` declarations. New vgpu loaders always emit the property, including `[]`. |
+
+`ShaderFunctionExport` fields:
+
+| Param | Type | Required | Default | Notes |
+|---|---|---|---|---|
+| name | string | ✔ | — | Authored direct-export name. Import aliases do not create entries. |
+| resolvedName | string | ✔ | — | Exact declaration identifier in final WGSL, after mangling and optional identifier minification. |
+| parameterNames | `readonly string[]` | ✔ | — | Authored parameter names in declaration order. Types and return values remain in the final WGSL header. |
 
 **Returns:** These are TypeScript interfaces, not callables. They return nothing.
 
@@ -88,7 +111,11 @@ fn fs_main() -> @location(0) vec4f {
 }
 `);
 
-const source: ShaderSource = { version: 1, wgsl: resolved.wgsl };
+const source: ShaderSource = {
+  version: 1,
+  wgsl: resolved.wgsl,
+  functionExports: [],
+};
 console.log(source.version, resolved.entryPoints[0]);
 ```
 
@@ -102,12 +129,15 @@ function acceptsLoaderOutput(shader: ShaderSource): string {
 acceptsLoaderOutput({
   version: 1,
   wgsl: "@compute @workgroup_size(1) fn main() {}",
+  functionExports: [],
 });
 ```
 
 ## Notes
 
-- `ShaderSource` v1 is exactly `{ version: 1, wgsl: string }`. It has no `bindings`, reflection, layouts, or cache metadata; `bindings` is reserved for a future version bump.
+- `ShaderSource` v1 keeps its original `version` and `wgsl` fields and may add `functionExports`. The field is optional in TypeScript so legacy producers remain assignable, but every new vgpu loader artifact emits it. Property presence is authoritative: `[]` exposes no callable direct exports, while absence denotes a legacy artifact.
+- `functionExports` contains only direct `export fn` declarations that survive graph emission and DCE. It does not root otherwise-dead declarations, publish import aliases, or include source paths.
+- `ShaderSource` still has no `bindings`, reflection, layouts, or cache metadata; `bindings` is reserved for a future version bump.
 - Treat `ResolvedShader` fields as read-only data. Do not patch placeholder AST internals to represent imports; use `resolveShader()` for import graphs.
 - `compile()` output does not prove WGSL validity. It only packages the string and rejects top-level `import`.
 - Pure-module contract for resolver graphs: imported modules may export structs/functions/constants/aliases, but no imported module may declare `@group/@binding`; declare resources only in the entry module.
