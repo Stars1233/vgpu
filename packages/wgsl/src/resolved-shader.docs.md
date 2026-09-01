@@ -78,7 +78,9 @@ interface ResolvedShader {
 | entryPoints | `readonly string[]` | ✔ | — | Names matched by `@(vertex|fragment|compute) fn <name>` in the source. |
 | stats | `{ lines: number; bytes: number; bindGroups: number }` | ✔ | — | Line count, UTF-8 byte length, and `bindGroups: 0`. |
 
-`ShaderSource` fields:
+### ShaderSource
+
+Fields:
 
 | Param | Type | Required | Default | Notes |
 |---|---|---|---|---|
@@ -86,7 +88,9 @@ interface ResolvedShader {
 | wgsl | string | ✔ | — | Plain WGSL emitted by a loader or resolver. |
 | functionExports | `readonly ShaderFunctionExport[]` | ✖ for legacy producers | absent | Authoritative identity for surviving direct `export fn` declarations. New vgpu loaders always emit the property, including `[]`. |
 
-`ShaderFunctionExport` fields:
+### ShaderFunctionExport
+
+Fields:
 
 | Param | Type | Required | Default | Notes |
 |---|---|---|---|---|

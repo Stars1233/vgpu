@@ -1,6 +1,8 @@
 import { expect, test } from "vitest";
 
-test("renders an adapted function on the GPUDevice supplied by vgpu", async () => {
+const dockerGpuTest = test.skipIf(process.env.VGPU_DOCKER_TEST !== "1");
+
+dockerGpuTest("renders an adapted function on the GPUDevice supplied by vgpu", async () => {
   const restoreBrowserGlobals = stubBrowserGlobals();
 
   try {
