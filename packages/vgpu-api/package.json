@@ -118,13 +118,13 @@
     "./scene": 12800,
     "./client": 512,
     "./core": 3584,
-    "./three": 3584
+    "./three": 2560
   },
   "bin": {
     "vgpu": "./bin/vgpu.js"
   },
   "vgpuExperienceBundleBudgetsGzipBytes": {
-    "init-only": 1024,
+    "init-only": 1536,
     "effect-only": 25600,
     "triangle-low-level": 28672,
     "draw-recipe-box": 30208,

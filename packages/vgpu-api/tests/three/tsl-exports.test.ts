@@ -1,11 +1,6 @@
 import { expect, test } from "vitest";
 import { resolveShader } from "@vgpu/wgsl/runtime";
 import { tslExports } from "vgpu/three";
-import {
-  WGSL_LEGACY_RESERVED_WORDS,
-  WGSL_RESERVED_WORDS,
-  WGSL_SPEC_KEYWORDS,
-} from "../../../wgsl/src/runtime/wgsl-identifiers.ts";
 
 test("turns a raw WGSL function into a callable Three node", () => {
   const { doubleValue } = tslExports(
@@ -81,6 +76,30 @@ test("reports malformed export metadata as an invalid source", () => {
   );
 });
 
+test("reports unreadable export metadata as an invalid source", () => {
+  const unreadable = Object.defineProperty(
+    { resolvedName: "finalValue", parameterNames: ["value"] },
+    "name",
+    {
+      get() {
+        throw new Error("unreadable metadata");
+      },
+    },
+  ) as {
+    readonly name: string;
+    readonly resolvedName: string;
+    readonly parameterNames: readonly string[];
+  };
+  const artifact = {
+    wgsl: "fn finalValue(value: f32) -> f32 { return value; }",
+    functionExports: [unreadable],
+  };
+
+  expect(errorCode(() => tslExports(artifact, ["surfaceValue"]))).toBe(
+    "VGPU-THREE-TSL-SOURCE-INVALID",
+  );
+});
+
 test("rejects invalid authored and resolved identifiers in export metadata", () => {
   const invalidArtifacts = [
     {
@@ -118,49 +137,6 @@ test("returns exports in a null-prototype map", () => {
 
   expect(Object.getPrototypeOf(exports)).toBeNull();
   expect(Object.hasOwn(exports, "surfaceValue")).toBe(true);
-});
-
-test("rejects invalid or duplicate authored parameter names in export metadata", () => {
-  const invalidParameterNames = [
-    ["9value", "second"],
-    ["fn", "second"],
-    ["class", "second"],
-    ["_", "second"],
-    ["__value", "second"],
-    ["value", "value"],
-  ];
-
-  const codes = invalidParameterNames.map((parameterNames) => errorCode(() => tslExports({
-    wgsl: "fn finalValue(first: f32, second: f32) -> f32 { return first + second; }",
-    functionExports: [{
-      name: "surfaceValue",
-      resolvedName: "finalValue",
-      parameterNames,
-    }],
-  }, ["surfaceValue"])));
-
-  expect(codes).toEqual(invalidParameterNames.map(() => "VGPU-THREE-TSL-SOURCE-INVALID"));
-});
-
-test("rejects every canonical WGSL reserved identifier in parameter metadata", () => {
-  const reservedIdentifiers = new Set([
-    ...WGSL_SPEC_KEYWORDS,
-    ...WGSL_RESERVED_WORDS,
-    ...WGSL_LEGACY_RESERVED_WORDS,
-  ]);
-
-  for (const parameterName of reservedIdentifiers) {
-    const code = errorCode(() => tslExports({
-      wgsl: "fn finalValue(value: f32) -> f32 { return value; }",
-      functionExports: [{
-        name: "surfaceValue",
-        resolvedName: "finalValue",
-        parameterNames: [parameterName],
-      }],
-    }, ["surfaceValue"]));
-
-    expect(code, parameterName).toBe("VGPU-THREE-TSL-SOURCE-INVALID");
-  }
 });
 
 test("does not consume a later function body when the selected declaration has none", () => {

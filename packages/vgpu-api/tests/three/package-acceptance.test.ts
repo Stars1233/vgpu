@@ -28,6 +28,7 @@ test("the packed package declares Three as an optional peer", () => {
 
 test("the packed vgpu/three export creates a callable Three node", () => {
   attachThreePeer();
+  attachWorkspaceDependencies();
   const consumer = join(fixture.root, "runtime-consumer.mjs");
   writeFileSync(
     consumer,
@@ -36,6 +37,29 @@ test("the packed vgpu/three export creates a callable Three node", () => {
       'const source = "fn doubleValue(value: f32) -> f32 { return value * 2.0; }";',
       'const { doubleValue } = tslExports(source, ["doubleValue"]);',
       "if (doubleValue({ value: 2 }).isNode !== true) throw new Error(\"expected a Three node\");",
+      'process.stdout.write("ok\\n");',
+      "",
+    ].join("\n"),
+  );
+
+  const output = execFileSync(process.execPath, [consumer], {
+    cwd: fixture.root,
+    encoding: "utf8",
+  });
+  expect(output).toBe("ok\n");
+});
+
+test("the packed vgpu root validates shader function export metadata", () => {
+  attachRootDependencies();
+  const consumer = join(fixture.root, "metadata-consumer.mjs");
+  writeFileSync(
+    consumer,
+    [
+      'import { isShaderFunctionExport } from "vgpu";',
+      "const valid = { name: \"surfaceColor\", resolvedName: \"a\", parameterNames: [\"position\"] };",
+      "const invalid = { ...valid, parameterNames: [\"position\", \"position\"] };",
+      'if (!isShaderFunctionExport(valid)) throw new Error("expected valid metadata");',
+      'if (isShaderFunctionExport(invalid)) throw new Error("expected invalid metadata");',
       'process.stdout.write("ok\\n");',
       "",
     ].join("\n"),
@@ -100,6 +124,48 @@ test("the packed types support the manual interface contract in NodeNext", () =>
   expect(diagnostics).toHaveLength(0);
 });
 
+test("the packed vgpu root types narrow unknown metadata in NodeNext", () => {
+  attachRootDependencies();
+  writeFileSync(
+    join(fixture.root, "package.json"),
+    `${JSON.stringify({ name: "vgpu-metadata-types-consumer", private: true, type: "module" }, null, 2)}\n`,
+  );
+  writeFileSync(
+    join(fixture.root, "metadata-types-consumer.ts"),
+    [
+      'import { isShaderFunctionExport, type ShaderFunctionExport } from "vgpu";',
+      "",
+      "declare const metadata: unknown;",
+      "if (isShaderFunctionExport(metadata)) {",
+      "  const typedMetadata: ShaderFunctionExport = metadata;",
+      "  void typedMetadata;",
+      "}",
+      "",
+    ].join("\n"),
+  );
+  const tsconfigPath = join(fixture.root, "metadata-types-tsconfig.json");
+  writeFileSync(
+    tsconfigPath,
+    `${JSON.stringify({
+      compilerOptions: {
+        target: "ES2022",
+        module: "NodeNext",
+        moduleResolution: "NodeNext",
+        strict: true,
+        noEmit: true,
+        // Root `vgpu` reaches wgpu-matrix, whose declarations are not NodeNext-compatible yet.
+        skipLibCheck: true,
+        lib: ["ES2022", "DOM"],
+      },
+      include: ["metadata-types-consumer.ts"],
+    }, null, 2)}\n`,
+  );
+
+  const diagnostics = compileTsconfig(tsconfigPath);
+  if (diagnostics.length > 0) throw new Error(formatDiagnostics(diagnostics));
+  expect(diagnostics).toHaveLength(0);
+});
+
 function packVgpu(): { readonly root: string; readonly packageRoot: string } {
   const root = mkdtempSync(join(tmpdir(), "vgpu-three-package-"));
   try {
@@ -135,14 +201,26 @@ function attachThreePeer(): void {
   if (!existsSync(link)) symlinkSync(target, link, "dir");
 }
 
+function attachRootDependencies(): void {
+  attachWorkspaceDependencies();
+  const matrix = join(fixture.root, "node_modules", "wgpu-matrix");
+  if (!existsSync(matrix)) {
+    symlinkSync(resolve(packageDir, "node_modules/wgpu-matrix"), matrix, "dir");
+  }
+}
+
 function attachTypeDependencies(): void {
+  attachWorkspaceDependencies();
+
   const typesRoot = join(fixture.root, "node_modules", "@types");
   mkdirSync(typesRoot, { recursive: true });
   const threeTypes = join(typesRoot, "three");
   if (!existsSync(threeTypes)) {
     symlinkSync(resolve(packageDir, "node_modules/@types/three"), threeTypes, "dir");
   }
+}
 
+function attachWorkspaceDependencies(): void {
   const vgpuScope = join(fixture.root, "node_modules", "@vgpu");
   if (!existsSync(vgpuScope)) {
     symlinkSync(resolve(packageDir, "node_modules/@vgpu"), vgpuScope, "dir");

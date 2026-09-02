@@ -1,22 +1,16 @@
+import { isShaderFunctionExport, type ShaderFunctionExport } from "@vgpu/wgsl";
 import { adapterError } from "./errors.ts";
 import { readFunctionSignature } from "./function-signature.ts";
-import { isValidWgslIdentifier } from "./wgsl-identifiers.ts";
-
-interface FunctionExportMetadata {
-  readonly name: string;
-  readonly resolvedName: string;
-  readonly parameterNames: readonly string[];
-}
 
 export type TslExportsSource = string | {
   readonly wgsl: string;
-  readonly functionExports?: readonly FunctionExportMetadata[];
+  readonly functionExports?: readonly ShaderFunctionExport[];
 };
 
 export function selectFunction(
   source: TslExportsSource,
   name: string,
-): FunctionExportMetadata {
+): ShaderFunctionExport {
   if (typeof source === "string" || !("functionExports" in source)) {
     const signature = readFunctionSignature(
       typeof source === "string" ? source : source.wgsl,
@@ -36,7 +30,7 @@ export function selectFunction(
       "functionExports must be an array when present.",
     );
   }
-  if (!source.functionExports.every(isFunctionExportMetadata)) {
+  if (!source.functionExports.every(isShaderFunctionExport)) {
     throw adapterError(
       "VGPU-THREE-TSL-SOURCE-INVALID",
       "functionExports contains malformed metadata.",
@@ -56,26 +50,4 @@ export function selectFunction(
     );
   }
   return matches[0]!;
-}
-
-function isFunctionExportMetadata(value: unknown): value is FunctionExportMetadata {
-  if (typeof value !== "object" || value === null) return false;
-  const metadata = value as Record<string, unknown>;
-  return typeof metadata.name === "string"
-    && isValidWgslIdentifier(metadata.name)
-    && typeof metadata.resolvedName === "string"
-    && isValidWgslIdentifier(metadata.resolvedName)
-    && areValidParameterNames(metadata.parameterNames);
-}
-
-function areValidParameterNames(value: unknown): value is readonly string[] {
-  if (!Array.isArray(value)) return false;
-  const names = new Set<string>();
-  for (const parameterName of value) {
-    if (typeof parameterName !== "string"
-      || !isValidWgslIdentifier(parameterName)
-      || names.has(parameterName)) return false;
-    names.add(parameterName);
-  }
-  return true;
 }

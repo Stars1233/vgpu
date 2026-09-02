@@ -89,6 +89,7 @@ vgpu/scene PerspectiveCameraOptions packages/vgpu-api/src/scene/perspective-came
 vgpu/scene degToRad packages/vgpu-api/src/scene/deg-to-rad.docs.md
 vgpu/scene srgb packages/vgpu-api/src/scene/srgb.docs.md
 @vgpu/wgsl compile packages/wgsl/src/compile.docs.md
+@vgpu/wgsl isShaderFunctionExport packages/wgsl/src/resolved-shader.docs.md
 @vgpu/wgsl ResolvedShader packages/wgsl/src/resolved-shader.docs.md
 @vgpu/wgsl ShaderSource packages/wgsl/src/resolved-shader.docs.md
 @vgpu/wgsl ShaderFunctionExport packages/wgsl/src/resolved-shader.docs.md

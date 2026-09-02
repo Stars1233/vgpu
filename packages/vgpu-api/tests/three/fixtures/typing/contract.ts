@@ -1,6 +1,6 @@
 import type { Node } from "three/webgpu";
 import { positionLocal } from "three/tsl";
-import type { ShaderFunctionExport } from "vgpu";
+import { isShaderFunctionExport, type ShaderFunctionExport } from "vgpu";
 import type { ShaderSource } from "vgpu/client";
 import { tslExports } from "vgpu/three";
 import surfaceModule from "./surface.wgsl";
@@ -63,7 +63,13 @@ const publicArtifact: ShaderSource = {
 };
 const importedExports: readonly ShaderFunctionExport[] | undefined =
   surfaceModule.functionExports;
+const unknownExport: unknown = surfaceColorExport;
+if (!isShaderFunctionExport(unknownExport)) {
+  throw new Error("expected shader function export metadata");
+}
+const narrowedExport: ShaderFunctionExport = unknownExport;
 
 tslExports(publicArtifact, ["surfaceColor"]);
 tslExports(surfaceModule, ["surfaceColor"]);
 void importedExports;
+void narrowedExport;

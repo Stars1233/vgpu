@@ -96,7 +96,7 @@
     "./reflect-source": "tooling"
   },
   "vgpuExportBundleBudgetsGzipBytes": {
-    ".": 1024,
+    ".": 2048,
     "./runtime": 24576,
     "./loader-webpack": 25088,
     "./loader-vite": 25088,
