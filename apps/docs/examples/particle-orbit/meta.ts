@@ -32,7 +32,12 @@ export const meta = {
     'responsive-canvas',
     'continuous-rendering',
   ],
-  thumb: { warmupFrames: 60, dt: 1 / 60, time: 2 },
+  thumb: {
+    warmupFrames: 60,
+    dt: 1 / 60,
+    time: 2,
+    requiredLimits: { maxStorageBuffersInVertexStage: 1 },
+  },
   files: [
     'index.tsx',
     'renderer.ts',

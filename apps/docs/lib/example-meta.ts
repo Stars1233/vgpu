@@ -5,6 +5,7 @@ export interface ExampleThumbOptions {
   readonly time?: number;
   readonly dt?: number;
   readonly note?: string;
+  readonly requiredLimits?: Readonly<Record<string, number>>;
 }
 
 /** Data-only contract for a migrated example's meta.ts export. */
