@@ -37,13 +37,13 @@ struct VertexOut {
   let mote = particles[instance];
 
   let radius = 0.7 + mote.seed * 1.4 + mote.energy * 2.2;
-  let twinkle = 0.35 + 0.65 * (0.5 + 0.5 * sin(params.time * (0.8 + mote.seed * 2.2) + f32(instance)));
+  let twinkle = 0.5 + 0.5 * (0.5 + 0.5 * sin(params.time * (0.8 + mote.seed * 2.2) + f32(instance)));
 
   let px = mote.position + corner * radius;
   var out: VertexOut;
   out.position = vec4f(px.x / (HALF_HEIGHT_PX * params.aspect), px.y / HALF_HEIGHT_PX, 0.0, 1.0);
   out.local = corner;
-  out.alpha = twinkle * mix(0.2, 0.6, mote.seed) + mote.energy * 0.5;
+  out.alpha = twinkle * mix(0.24, 0.62, mote.seed) + mote.energy * 0.5;
   out.heat = mote.energy;
   out.tint = mote.tint;
   return out;
