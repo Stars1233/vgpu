@@ -95,7 +95,7 @@ frameLoop(gpu, (f) => controller.active?.render(f, clock(gpu).time));
 
 ## 4. Start the signals after the first frame
 
-Detection must cost the first paint nothing. Arm the signals from inside the frame loop, one `requestAnimationFrame` plus a `setTimeout(0)` after the first presented frame, through a dynamic import so neither the signals module nor detect-gpu lands in the initial chunk:
+Detection must cost the first paint nothing. Arm the signals from inside the frame loop, one `requestAnimationFrame` plus a `setTimeout(0)` after the first presented frame, through a dynamic import so neither the signals module nor detect-gpu lands in the initial chunk. detect-gpu is itself a second dynamic `import()` inside `quality-signals.ts`, so its code (~15 KB gzip) and the vendor benchmark table it fetches are downloaded only after High is already on screen, and only when the preference is `auto`. The initial bundle pays nothing for the feature:
 
 ```text
 frameLoop(gpu, (f) => {
@@ -142,7 +142,7 @@ Expose `{ preference, effective, reason }` to the UI and log every decision with
 ## Anti-patterns
 
 - **Upgrading back automatically.** Presented FPS improves the moment Low is active, which would immediately argue for High again. Only the user moves back up.
-- **Importing detect-gpu at module scope.** Its WebGL probe and benchmark fetch then compete with your first frame. Import it inside the signals module, which is itself imported after the first frame.
+- **Importing detect-gpu at module scope.** Its code joins your initial bundle, and its WebGL probe and benchmark fetch compete with your first frame. Import it inside the signals module, which is itself imported after the first frame.
 - **Judging FPS against the rAF rate.** A deliberate 30 FPS cap or a 120 Hz display both produce false downgrades. Pass `rendered` honestly and `targetFps` when you cap.
 - **Swapping before `prepare()` resolves.** Compiling pipelines on the swap frame is the hitch the whole technique exists to avoid.
 - **Calling `getBattery()` without a feature check.** It throws where the API is absent.
