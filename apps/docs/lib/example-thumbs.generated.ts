@@ -26,10 +26,6 @@ export const exampleThumbs: Record<string, ExampleThumbPresence> = {
     "card": "/examples/black-hole.card.png",
     "hero": "/examples/black-hole.hero.png"
   },
-  "boot-void": {
-    "card": "/examples/boot-void.card.png",
-    "hero": "/examples/boot-void.hero.png"
-  },
   "clipping": {
     "card": "/examples/clipping.card.png",
     "hero": "/examples/clipping.hero.png"
@@ -81,6 +77,10 @@ export const exampleThumbs: Record<string, ExampleThumbPresence> = {
   "optimized-black-hole": {
     "card": "/examples/optimized-black-hole.card.png",
     "hero": "/examples/optimized-black-hole.hero.png"
+  },
+  "particle-orbit": {
+    "card": "/examples/particle-orbit.card.png",
+    "hero": "/examples/particle-orbit.hero.png"
   },
   "radiance-cascades": {
     "card": "/examples/radiance-cascades.card.png",

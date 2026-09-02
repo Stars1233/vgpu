@@ -1,8 +1,8 @@
 export const meta = {
-  slug: 'boot-void',
-  title: 'Boot Void',
+  slug: 'particle-orbit',
+  title: 'Particle Orbit',
   description:
-    'A retro console boot homage co-driven by vgpu and TypeGPU on one shared device: TypeGPU simulates light-seeking dust with typed schemas, fed by the irradiance vgpu renders through radiance cascades, and vgpu draws the particle buffer back zero-copy. Plus a render bundle, bloom, and a CRT finish.',
+    'A shared-device vgpu + TypeGPU experiment: TypeGPU advances light-seeking dust through a radiance field rendered by vgpu, then vgpu draws the same particle buffer zero-copy alongside orbiting lights, HDR bloom, and a CRT finish.',
   tags: [
     'instancing',
     'particles',

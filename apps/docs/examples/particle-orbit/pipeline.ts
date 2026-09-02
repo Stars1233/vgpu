@@ -54,7 +54,7 @@ export function createEffects(gpu: Gpu) {
       vertices: 6,
       instances: DUST_COUNT,
       blend: additive,
-      label: 'boot-void-stars',
+      label: 'particle-orbit-stars',
     }),
     atmosphere: effect(gpu, atmosphereWgsl, { set: { samp } }),
     trails: draw(gpu, {
@@ -62,7 +62,7 @@ export function createEffects(gpu: Gpu) {
       vertices: 6,
       instances: TRAIL_INSTANCES,
       blend: additive,
-      label: 'boot-void-trails',
+      label: 'particle-orbit-trails',
     }),
     bright: effect(gpu, brightWgsl, { set: { samp } }),
     blur: BLURS.map((options) => effect(gpu, blurWgsl, { set: { samp, blur: options } })),
@@ -164,7 +164,7 @@ export async function prewarm(effects: Effects, targets: Targets, output: Output
 export function recordScene(gpu: Gpu, effects: Effects): Bundle {
   return bundle(
     gpu,
-    { target: { colors: [SCENE_FORMAT], sampleCount: 4 }, label: 'boot-void-scene' },
+    { target: { colors: [SCENE_FORMAT], sampleCount: 4 }, label: 'particle-orbit-scene' },
     (pass) => {
       pass.draw(effects.nebula);
       pass.draw(effects.stars);
