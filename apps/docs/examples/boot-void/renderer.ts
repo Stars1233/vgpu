@@ -139,7 +139,9 @@ export function createRenderer(options: RendererOptions) {
     const { init } = await import('vgpu');
     if (disposed) return;
 
-    const nextGpu = await init();
+    const nextGpu = await init({
+      requiredLimits: { maxStorageBuffersInVertexStage: 1 },
+    });
     if (disposed) {
       nextGpu.dispose();
       return;

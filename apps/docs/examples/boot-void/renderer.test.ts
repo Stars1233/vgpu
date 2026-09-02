@@ -241,6 +241,9 @@ test('builds the pipeline, records the scene bundle, drives time, and coalesces 
   const env = setup();
   const renderer = createRenderer({ canvas: env.canvas });
   await renderer.ready;
+  expect(mocks.init).toHaveBeenCalledWith({
+    requiredLimits: { maxStorageBuffersInVertexStage: 1 },
+  });
   expect(env.gpu.fns.frameLoop).toHaveBeenCalledOnce();
   // nebula, atmosphere, bright, 4× blur, post, plus the radiance chain.
   expect(env.gpu.fns.effect).toHaveBeenCalledTimes(8 + radianceEffectCount([200, 100]));
