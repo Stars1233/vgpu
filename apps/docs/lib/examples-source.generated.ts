@@ -1751,7 +1751,7 @@ export const exampleSources = {
       {
         "path": "index.tsx",
         "language": "tsx",
-        "content": "'use client';\n\nimport { useEffect, useRef } from 'react';\nimport { createRenderer } from './renderer';\n\nexport function Example() {\n  const canvasRef = useRef<HTMLCanvasElement>(null);\n\n  useEffect(() => {\n    const canvas = canvasRef.current;\n    if (!canvas) return;\n    const renderer = createRenderer({ canvas });\n    void renderer.ready;\n    return () => renderer.dispose();\n  }, []);\n\n  return (\n    <div className=\"relative h-full w-full overflow-hidden bg-black\">\n      <canvas ref={canvasRef} className=\"block h-full w-full touch-none\" />\n    </div>\n  );\n}\n"
+        "content": "'use client';\n\nimport { useEffect, useRef } from 'react';\nimport { createRenderer } from './renderer';\n\nexport function Example() {\n  const canvasRef = useRef<HTMLCanvasElement>(null);\n\n  useEffect(() => {\n    const canvas = canvasRef.current;\n    if (!canvas) return;\n    const renderer = createRenderer({ canvas });\n    void renderer.ready;\n    return () => renderer.dispose();\n  }, []);\n\n  return (\n    <div className=\"relative h-full w-full overflow-hidden bg-black\">\n      <canvas ref={canvasRef} className=\"block h-full w-full touch-none\" />\n    </div>\n  );\n}\n\nexport default Example;\n"
       },
       {
         "path": "renderer.ts",
