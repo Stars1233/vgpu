@@ -22,6 +22,7 @@ export const exampleSlugs = [
   'mnist-classifier',
   'air-painting',
   'three-tsl',
+  'particle-orbit',
 ] as const;
 
 export type ExampleSlug = (typeof exampleSlugs)[number];

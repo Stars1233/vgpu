@@ -29,7 +29,8 @@
     "depth-estimation": 65647,
     "mnist-classifier": 63571,
     "air-painting": 71822,
-    "three-tsl": 247268
+    "three-tsl": 247268,
+    "particle-orbit": 160967
   },
   "exampleGrowth": {
     "percent": 2,

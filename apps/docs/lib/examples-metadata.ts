@@ -25,6 +25,7 @@ import { meta as depthEstimationMeta } from '../examples/depth-estimation/meta';
 import { meta as mnistClassifierMeta } from '../examples/mnist-classifier/meta';
 import { meta as airPaintingMeta } from '../examples/air-painting/meta';
 import { meta as threeTslMeta } from '../examples/three-tsl/meta';
+import { meta as particleOrbitMeta } from '../examples/particle-orbit/meta';
 
 const rawMetadata = {
   gradient: gradientMeta,
@@ -50,6 +51,7 @@ const rawMetadata = {
   'mnist-classifier': mnistClassifierMeta,
   'air-painting': airPaintingMeta,
   'three-tsl': threeTslMeta,
+  'particle-orbit': particleOrbitMeta,
 } satisfies Record<ExampleSlug, ExampleMetaDefinition>;
 
 function withThumbnails(meta: ExampleMetaDefinition): ExampleMeta {
@@ -84,6 +86,7 @@ export const exampleMetadataBySlug = {
   'mnist-classifier': withThumbnails(rawMetadata['mnist-classifier']),
   'air-painting': withThumbnails(rawMetadata['air-painting']),
   'three-tsl': withThumbnails(rawMetadata['three-tsl']),
+  'particle-orbit': withThumbnails(rawMetadata['particle-orbit']),
 } satisfies Record<ExampleSlug, ExampleMeta>;
 
 export const examplesMetadata = exampleSlugs.map((slug) => exampleMetadataBySlug[slug]);
