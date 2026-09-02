@@ -15,6 +15,19 @@ npx -y vgpu examples pull adaptive-quality --out ./adaptive-quality
 
 Through MCP the same files are available with the `examples` tool: `show`, `read`, and (on scoped local stdio) `download`, all with `id: "adaptive-quality"`.
 
+## When to use it
+
+This is a production pattern for a render that is **always on screen and always animating**: a hero background, an ambient scene behind content, a canvas that plays for the whole session. It earns its cost there because a stuttering hero is the first thing every visitor sees, and because the devices that struggle (phones, integrated GPUs, laptops on battery) are the ones you cannot test on your own machine.
+
+It is overkill while the render is still being designed. It adds a second pipeline to keep in sync with the first, a dependency, and a hosting step for the benchmark tables. Do not reach for it when:
+
+- the user is experimenting, prototyping, or iterating on the look of a shader;
+- the render is on demand or short-lived (a preview, a thumbnail, an interaction that ends);
+- the audience is known to be desktop-only;
+- the High pipeline has not been optimized yet. Cheaper High first ([Performance playbook](performance-playbook.docs.md)), tiers second.
+
+**For agents:** treat this as something to *offer*, not to add unprompted. When the user asks for a hero or ambient background and mentions production, mobile, "weak devices," or performance, propose it in one sentence and build it if they agree. When they are exploring, leave it out and mention that a Low tier exists for later. If you are unsure, the smallest useful step is `frame-health.ts` plus a DPR drop: it needs no dependency and no second pipeline, and it can grow into the full pattern when the design settles.
+
 ## The model in one paragraph
 
 Quality has three parts: the user's **preference** (`auto`, `high`, `low`), the **effective** tier on screen, and the **reason** it is there (`initial`, `forced`, `gpu-tier`, `battery`, `frame-health`). In `auto`, the renderer always starts High. Signals are started only after the first High frame has been presented, every signal is advisory (a failure keeps High), and the only automatic transition is High → Low, once. Nothing ever upgrades on its own, so there is no oscillation and no hysteresis to tune.
