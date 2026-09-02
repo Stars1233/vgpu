@@ -1,5 +1,5 @@
-// Motes from whichever particle buffer the active mode binds; the struct
-// matches the 48-byte layout both sims write.
+// Motes from the TypeGPU simulation buffer vgpu wraps for rendering. This
+// struct matches TypeGPU's 48-byte Particle layout.
 struct Particle {
   position: vec2f,
   velocity: vec2f,

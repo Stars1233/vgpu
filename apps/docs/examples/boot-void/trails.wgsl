@@ -1,5 +1,5 @@
-// Four lissajous trails, one instance per segment plus a head halo, all
-// derived from instance_index and time.
+// Four colored orbs circle the central light on phase-separated elliptical
+// tracks. Each instance is one trail segment or a head halo.
 struct Params {
   time: f32,
   aspect: f32,
@@ -13,12 +13,15 @@ const FOCAL_PX = 360.0;
 const HALF_HEIGHT_PX = 240.0;
 const HALO_RADIUS_PX = 7.0;
 
-fn path(u: f32) -> vec3f {
-  return vec3f(
-    cos(u) * 1.4 + sin(u * 2.3) * 0.4,
-    sin(u * 1.3) * 0.95 + cos(u * 1.7) * 0.3,
-    3.2 + sin(u * 0.7) * 1.2,
-  );
+fn orbit(index: f32, time: f32) -> vec3f {
+  let angle = time * (0.38 + index * 0.04) + index * 1.5707963;
+  let radius = 0.92 + index * 0.12;
+  let tilt = -0.42 + index * 0.28;
+  let local = vec2f(cos(angle) * radius, sin(angle) * radius * 0.62);
+  let c = cos(tilt);
+  let s = sin(tilt);
+  let xy = vec2f(local.x * c - local.y * s, local.x * s + local.y * c);
+  return vec3f(xy, 3.2 + sin(angle) * 0.28);
 }
 
 fn project(p: vec3f) -> vec2f {
@@ -53,8 +56,6 @@ struct VertexOut {
   );
   let trail = instance / POINTS;
   let segment = instance % POINTS;
-  let speed = 0.45 + f32(trail) * 0.08;
-  let phase = f32(trail) * 1.5707963;
   let corner = quad[vertex];
 
   var out: VertexOut;
@@ -63,7 +64,7 @@ struct VertexOut {
 
   if (segment == POINTS - 1u) {
     // Head halo: a small screen-aligned quad with a radial falloff.
-    let head = project(path(params.time * speed + phase));
+    let head = project(orbit(f32(trail), params.time));
     let centered = vec2f(corner.x * 2.0 - 1.0, corner.y);
     out.position = clip(head + centered * HALO_RADIUS_PX, params.aspect);
     out.local = centered;
@@ -73,10 +74,10 @@ struct VertexOut {
   }
 
   let fade = 1.0 - f32(segment + 1u) / f32(POINTS);
-  let u0 = (params.time - f32(segment) * HISTORY_DT) * speed + phase;
-  let u1 = (params.time - f32(segment + 1u) * HISTORY_DT) * speed + phase;
-  let p0 = project(path(u0));
-  let p1 = project(path(u1));
+  let t0 = params.time - f32(segment) * HISTORY_DT;
+  let t1 = params.time - f32(segment + 1u) * HISTORY_DT;
+  let p0 = project(orbit(f32(trail), t0));
+  let p1 = project(orbit(f32(trail), t1));
   let dir = p1 - p0;
   let axis = dir / max(length(dir), 0.0001);
   let perp = vec2f(-axis.y, axis.x);

@@ -68,18 +68,19 @@ export function simulationWgsl(): string {
       const FOCAL_PX = 360.0;
       const HALF_HEIGHT_PX = 240.0;
 
-      fn path(u: f32) -> vec3f {
-        return vec3f(
-          cos(u) * 1.4 + sin(u * 2.3) * 0.4,
-          sin(u * 1.3) * 0.95 + cos(u * 1.7) * 0.3,
-          3.2 + sin(u * 0.7) * 1.2,
-        );
+      fn orbit(index: f32, time: f32) -> vec3f {
+        let angle = time * (0.38 + index * 0.04) + index * 1.5707963;
+        let radius = 0.92 + index * 0.12;
+        let tilt = -0.42 + index * 0.28;
+        let local = vec2f(cos(angle) * radius, sin(angle) * radius * 0.62);
+        let c = cos(tilt);
+        let s = sin(tilt);
+        let xy = vec2f(local.x * c - local.y * s, local.x * s + local.y * c);
+        return vec3f(xy, 3.2 + sin(angle) * 0.28);
       }
 
       fn headPx(index: f32, time: f32) -> vec2f {
-        let speed = 0.45 + index * 0.08;
-        let phase = index * 1.5707963;
-        let p = path(time * speed + phase);
+        let p = orbit(index, time);
         return p.xy * (FOCAL_PX / max(p.z, 0.01));
       }
 

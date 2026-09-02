@@ -208,11 +208,11 @@ test('builds the pipeline, records the scene bundle, drives time, and coalesces 
   expect(env.gpu.fns.frameLoop).toHaveBeenCalledOnce();
   // nebula, atmosphere, bright, 4× blur, post, plus the radiance chain.
   expect(env.gpu.fns.effect).toHaveBeenCalledTimes(8 + radianceEffectCount([200, 100]));
-  // stars, glass, trails.
-  expect(env.gpu.fns.draw).toHaveBeenCalledTimes(3);
-  expect(env.gpu.fns.geometry).toHaveBeenCalledOnce();
+  // stars and trails.
+  expect(env.gpu.fns.draw).toHaveBeenCalledTimes(2);
+  expect(env.gpu.fns.geometry).not.toHaveBeenCalled();
   expect(env.gpu.fns.bundle).toHaveBeenCalledOnce();
-  expect(env.bundleRecorder.draw).toHaveBeenCalledTimes(3);
+  expect(env.bundleRecorder.draw).toHaveBeenCalledTimes(2);
   expect(env.canvasListeners.has('pointermove')).toBe(true);
   // TypeGPU shares the device; its particle buffer is wrapped zero-copy.
   expect(dustMocks.create).toHaveBeenCalledWith(env.gpu.gpu);

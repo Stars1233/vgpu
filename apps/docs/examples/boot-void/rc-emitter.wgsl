@@ -14,16 +14,19 @@ const FRAME = 480.0;
 // Luminance above this reads as solid geometry in the light field.
 const OCCLUDER_THRESHOLD = 0.30;
 
-fn path(u: f32) -> vec3f {
-  return vec3f(
-    cos(u) * 1.4 + sin(u * 2.3) * 0.4,
-    sin(u * 1.3) * 0.95 + cos(u * 1.7) * 0.3,
-    3.2 + sin(u * 0.7) * 1.2,
-  );
+fn orbit(index: f32, time: f32) -> vec3f {
+  let angle = time * (0.38 + index * 0.04) + index * 1.5707963;
+  let radius = 0.92 + index * 0.12;
+  let tilt = -0.42 + index * 0.28;
+  let local = vec2f(cos(angle) * radius, sin(angle) * radius * 0.62);
+  let c = cos(tilt);
+  let s = sin(tilt);
+  let xy = vec2f(local.x * c - local.y * s, local.x * s + local.y * c);
+  return vec3f(xy, 3.2 + sin(angle) * 0.28);
 }
 
-fn headUv(u: f32, aspect: f32) -> vec2f {
-  let p = path(u);
+fn headUv(index: f32, time: f32, aspect: f32) -> vec2f {
+  let p = orbit(index, time);
   let px = p.xy * (FOCAL_PX / max(p.z, 0.01));
   return vec2f(0.5 + px.x / (FRAME * aspect), 0.5 - px.y / FRAME);
 }
@@ -56,9 +59,7 @@ fn headUv(u: f32, aspect: f32) -> vec2f {
   }
 
   for (var i = 0u; i < 4u; i++) {
-    let speed = 0.45 + f32(i) * 0.08;
-    let phase = f32(i) * 1.5707963;
-    let head = (headUv(params.time * speed + phase, params.aspect) - uv) *
+    let head = (headUv(f32(i), params.time, params.aspect) - uv) *
       vec2f(params.aspect, 1.0);
     if (length(head) < 0.013) {
       radiance = colors[i] * 4.0;

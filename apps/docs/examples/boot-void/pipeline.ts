@@ -2,7 +2,6 @@ import {
   bundle,
   draw,
   effect,
-  geometry,
   sampler,
   target,
   type Bundle,
@@ -11,7 +10,6 @@ import {
   type Surface,
   type Target,
 } from 'vgpu';
-import { box } from 'vgpu/scene';
 
 import atmosphereWgsl from './atmosphere.wgsl';
 import {
@@ -22,7 +20,6 @@ import {
 } from './radiance';
 import blurWgsl from './blur.wgsl';
 import brightWgsl from './bright.wgsl';
-import glassWgsl from './glass.wgsl';
 import nebulaWgsl from './nebula.wgsl';
 import postWgsl from './post.wgsl';
 import starsWgsl from './stars.wgsl';
@@ -32,7 +29,6 @@ type Output = Surface | Target;
 
 const CLEAR = [0, 0, 0, 1] as const;
 const SCENE_FORMAT = 'rgba16float' as const;
-export const GLASS_INSTANCES = 4;
 // 4 trails × (21 segments + 1 head halo).
 export const TRAIL_INSTANCES = 88;
 export const DUST_COUNT = 224;
@@ -46,7 +42,6 @@ const BLURS = [
 
 export function createEffects(gpu: Gpu) {
   const samp = sampler(gpu, { minFilter: 'linear', magFilter: 'linear' });
-  const cube = geometry(gpu, box({ size: 1 }));
   const additive = {
     color: { src: 'src-alpha', dst: 'one' },
     alpha: { src: 'one', dst: 'one' },
@@ -59,15 +54,6 @@ export function createEffects(gpu: Gpu) {
       instances: DUST_COUNT,
       blend: additive,
       label: 'boot-void-stars',
-    }),
-    glass: draw(gpu, {
-      shader: glassWgsl,
-      geometry: cube,
-      instances: GLASS_INSTANCES,
-      blend: 'alpha',
-      cull: 'back',
-      frontFace: 'cw',
-      label: 'boot-void-glass',
     }),
     atmosphere: effect(gpu, atmosphereWgsl, { set: { samp } }),
     trails: draw(gpu, {
@@ -129,7 +115,6 @@ export function setBindings(effects: Effects, targets: Targets, radiance: Radian
   const aspect = targets.scene.size[0] / targets.scene.size[1];
   effects.nebula.set({ params: { aspect } });
   effects.stars.set({ params: { aspect } });
-  effects.glass.set({ params: { aspect } });
   effects.atmosphere.set({ src: targets.scene, params: { aspect } });
   effects.trails.set({ params: { aspect } });
   effects.bright.set({ src: targets.composite });
@@ -152,7 +137,6 @@ export function setTime(effects: Effects, radiance: Radiance, time: number): voi
   const params = { params: { time } };
   effects.nebula.set(params);
   effects.stars.set(params);
-  effects.glass.set(params);
   effects.atmosphere.set(params);
   effects.trails.set(params);
   effects.post.set(params);
@@ -167,7 +151,6 @@ export async function prewarm(effects: Effects, targets: Targets, output: Output
   await Promise.all([
     effects.nebula.compile(targets.scene),
     effects.stars.compile(targets.scene),
-    effects.glass.compile(targets.scene),
     effects.atmosphere.compile(targets.composite),
     effects.trails.compile(targets.composite),
     effects.bright.compile(targets.bloom[0]),
@@ -184,7 +167,6 @@ export function recordScene(gpu: Gpu, effects: Effects): Bundle {
     (pass) => {
       pass.draw(effects.nebula);
       pass.draw(effects.stars);
-      pass.draw(effects.glass);
     },
   );
 }

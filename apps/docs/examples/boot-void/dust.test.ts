@@ -17,6 +17,7 @@ test('the resolved compute shader carries the generated declarations', () => {
   expect(wgsl).toContain('struct Particle');
   expect(wgsl).toContain('struct SimParams');
   expect(wgsl).toContain('var<storage, read_write> particles: array<Particle>');
+  expect(wgsl).toContain('fn orbit');
   expect(wgsl).toContain('textureSampleLevel');
 });
 

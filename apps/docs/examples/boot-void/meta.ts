@@ -40,7 +40,6 @@ export const meta = {
     'radiance.ts',
     'nebula.wgsl',
     'stars.wgsl',
-    'glass.wgsl',
     'atmosphere.wgsl',
     'trails.wgsl',
     'rc-emitter.wgsl',
