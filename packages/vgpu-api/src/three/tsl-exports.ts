@@ -3,8 +3,8 @@ import { nodeObject, wgsl, wgslFn } from "three/tsl";
 import type { ShaderNodeObject } from "three/tsl";
 import { adapterError } from "./errors.ts";
 import { readFunctionSignature } from "./function-signature.ts";
-import { assertPrivateNamespaceAvailable, privateNamespacePrefix } from "./private-namespace.ts";
 import { selectFunction, type TslExportsSource } from "./source-exports.ts";
+import { assertSourceSupported, privateNamespacePrefix } from "./source-validation.ts";
 
 type TslInputs = Readonly<Record<string, Node | number>>;
 type TslCallable = (inputs: TslInputs) => ShaderNodeObject<Node>;
@@ -37,7 +37,7 @@ export function tslExports(
   names: readonly string[],
 ): Record<string, TslCallable> {
   const moduleWgsl = typeof source === "string" ? source : source.wgsl;
-  assertPrivateNamespaceAvailable(moduleWgsl);
+  assertSourceSupported(moduleWgsl);
   const include = wgsl(moduleWgsl);
   const allocateWrapperName = wrapperNameAllocator(moduleWgsl);
   const result = Object.create(null) as Record<string, TslCallable>;

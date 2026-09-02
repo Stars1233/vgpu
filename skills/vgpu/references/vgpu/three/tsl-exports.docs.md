@@ -63,7 +63,7 @@ declare function tslExports<Contract extends TslContractShape<Contract>>(
 
 **Returns:** A readonly object with one callable Three TSL node for each requested name. Every callable takes one named-input object whose keys match the authored WGSL parameter names and whose values are Three nodes or numbers.
 
-**Throws:** `VGPU-THREE-TSL-EXPORT-NOT-FOUND` when no authoritative direct export matches; `VGPU-THREE-TSL-EXPORT-AMBIGUOUS` when multiple exports match; `VGPU-THREE-TSL-SIGNATURE-UNSUPPORTED` for a void or non-forwardable function; `VGPU-THREE-TSL-SOURCE-INVALID` when metadata and emitted WGSL disagree, the final declaration is malformed, or source uses the private adapter namespace. Errors thrown by Three are not wrapped.
+**Throws:** `VGPU-THREE-TSL-EXPORT-NOT-FOUND` when no authoritative direct export matches; `VGPU-THREE-TSL-EXPORT-AMBIGUOUS` when multiple exports match; `VGPU-THREE-TSL-SIGNATURE-UNSUPPORTED` for a void or non-forwardable function, or when the module contains a global `enable`, `requires`, or `diagnostic` directive; `VGPU-THREE-TSL-SOURCE-INVALID` when metadata and emitted WGSL disagree, the final declaration is malformed, or source uses the private adapter namespace. Errors thrown by Three are not wrapped.
 
 ## Example
 
@@ -109,6 +109,7 @@ The contract is a compile-time assertion maintained by the application; it is no
 - Export metadata keeps authored `parameterNames` in declaration order and uses `resolvedName` for the exact declaration identifier in the final WGSL.
 - The `_vgpu_three_` top-level declaration namespace is reserved for private forwarding functions. Source that declares a name in that namespace fails with `VGPU-THREE-TSL-SOURCE-INVALID`.
 - Functions must be pure, have no shader-stage attribute, receive values through parameters, and return a value.
+- Global `enable`, `requires`, and `diagnostic` directives are unsupported because Three emits `wgsl()` includes after its own global declarations. An `@diagnostic(...)` attribute is not a module directive and is not rejected by this check; the adapter's other signature constraints still apply.
 - Without a manual `Contract`, TypeScript infers requested export keys but not WGSL parameter names or WGSL value and return types.
 - Match thrown values by `.code`; the adapter does not export an error class.
 - **See also:** [Use WGSL modules in three.js TSL](/guides/threejs), [Three.js WGSL modules](/examples/tsl-exports), `ShaderSource`, and `resolveShader`.

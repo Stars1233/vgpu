@@ -150,6 +150,7 @@ Only direct `export fn` declarations in the resolved graph become addressable:
 - Re-export syntax is not supported.
 - Top-level declarations whose names start with `_vgpu_three_` are reserved for the adapter's private forwarding functions.
 - Functions must return a value. Void functions, shader entry points, resource-owning modules, and parameter or return forms that Three's `wgslFn()` cannot represent are unsupported.
+- Global `enable`, `requires`, and `diagnostic` directives are unsupported because Three emits `wgsl()` includes after its own global declarations. An `@diagnostic(...)` attribute is not a module directive and is not rejected by this check; the adapter's other signature constraints still apply.
 
 ## Errors
 
@@ -159,7 +160,7 @@ Only direct `export fn` declarations in the resolved graph become addressable:
 | --- | --- | --- |
 | `VGPU-THREE-TSL-EXPORT-NOT-FOUND` | No surviving direct export has the requested authored name. | Fix the name, add `export` to the declaration, or ensure an entry-point graph did not prune it. |
 | `VGPU-THREE-TSL-EXPORT-AMBIGUOUS` | More than one surviving direct export has that authored name. | Add a uniquely named Three-facing forwarding export. |
-| `VGPU-THREE-TSL-SIGNATURE-UNSUPPORTED` | The function is void or its signature cannot be forwarded through Three TSL. | Use a pure value-returning function with `wgslFn()`-compatible parameters. |
+| `VGPU-THREE-TSL-SIGNATURE-UNSUPPORTED` | The function cannot be forwarded, or the module contains a global WGSL directive. | Use a pure value-returning function with `wgslFn()`-compatible parameters and no global `enable`, `requires`, or `diagnostic` directive. `@diagnostic(...)` attributes are distinct from module directives. |
 | `VGPU-THREE-TSL-SOURCE-INVALID` | Export metadata and the emitted WGSL disagree, the final declaration cannot be read, or source uses the private `_vgpu_three_` namespace. | Rename private-namespace declarations or rebuild the WGSL artifact with matching vgpu packages; report the mismatch if it persists. |
 
 Errors thrown later by Three while building a material are left unchanged.

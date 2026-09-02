@@ -22,6 +22,74 @@ fn surfaceValue(value: f32) -> f32 { return _vgpu_three_0(value); }
   );
 });
 
+test("rejects top-level diagnostic directives from resolved modules", async () => {
+  const source = await resolveShader({
+    entry: "/surface.wgsl",
+    validate: false,
+    modules: {
+      "/surface.wgsl": `
+diagnostic(off, derivative_uniformity);
+
+export fn surfaceValue(value: f32) -> f32 { return value; }
+`,
+    },
+  });
+
+  expect(errorCode(() => tslExports(source, ["surfaceValue"]))).toBe(
+    "VGPU-THREE-TSL-SIGNATURE-UNSUPPORTED",
+  );
+});
+
+test("rejects top-level enable directives", () => {
+  const source = `
+enable f16;
+
+fn surfaceValue(value: f32) -> f32 { return value; }
+`;
+
+  expect(errorCode(() => tslExports(source, ["surfaceValue"]))).toBe(
+    "VGPU-THREE-TSL-SIGNATURE-UNSUPPORTED",
+  );
+});
+
+test("rejects top-level requires directives", () => {
+  const source = `
+requires readonly_and_readwrite_storage_textures;
+
+fn surfaceValue(value: f32) -> f32 { return value; }
+`;
+
+  expect(errorCode(() => tslExports(source, ["surfaceValue"]))).toBe(
+    "VGPU-THREE-TSL-SIGNATURE-UNSUPPORTED",
+  );
+});
+
+test("allows directive words in comments and supported diagnostic attributes", () => {
+  const sources = [
+    `
+// diagnostic(off, derivative_uniformity);
+// enable f16;
+/* requires readonly_and_readwrite_storage_textures; */
+@diagnostic(off, derivative_uniformity)
+fn surfaceValue(value: f32) -> f32 { return value; }
+`,
+    `
+fn surfaceValue(value: f32) -> f32 {
+  @diagnostic(off, derivative_uniformity) {
+    return value;
+  }
+}
+`,
+  ];
+
+  const nodes = sources.map((source) => {
+    const { surfaceValue } = tslExports(source, ["surfaceValue"]);
+    return surfaceValue({ value: 2 });
+  });
+
+  expect(nodes).toMatchObject([{ isNode: true }, { isNode: true }]);
+});
+
 test("finds resolver-mangled functions in legacy shader artifacts", () => {
   const legacyArtifact = {
     version: 1 as const,

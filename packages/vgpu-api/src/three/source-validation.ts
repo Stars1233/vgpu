@@ -2,18 +2,34 @@ import { adapterError } from "./errors.ts";
 import { scanWgslTokens, type WgslToken } from "./wgsl-tokens.ts";
 
 export const privateNamespacePrefix = "_vgpu_three_";
+const moduleDirectives = ["diagnostic", "enable", "requires"];
 const namedDeclarationKinds = new Set(["alias", "const", "fn", "override", "struct", "var"]);
 
-export function assertPrivateNamespaceAvailable(source: string): void {
+export function assertSourceSupported(source: string): void {
   const tokens = scanWgslTokens(source);
-  let depth = 0;
-  for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i]!;
-    if (token.text === "{") { depth++; continue; }
-    if (token.text === "}") { depth = Math.max(0, depth - 1); continue; }
-    if (depth > 0 || !namedDeclarationKinds.has(token.text)) continue;
+  let nestingDepth = 0;
 
-    const name = declarationName(tokens, i);
+  for (let index = 0; index < tokens.length; index++) {
+    const token = tokens[index]!;
+    if ("([{".includes(token.text)) {
+      nestingDepth++;
+      continue;
+    }
+    if (")]}".includes(token.text)) {
+      nestingDepth = Math.max(0, nestingDepth - 1);
+      continue;
+    }
+    if (nestingDepth > 0) continue;
+
+    if (moduleDirectives.includes(token.text) && tokens[index - 1]?.text !== "@") {
+      throw adapterError(
+        "VGPU-THREE-TSL-SIGNATURE-UNSUPPORTED",
+        `Three TSL cannot place '${token.text}' before declarations.`,
+      );
+    }
+    if (!namedDeclarationKinds.has(token.text)) continue;
+
+    const name = declarationName(tokens, index);
     if (name?.text.startsWith(privateNamespacePrefix)) {
       throw adapterError(
         "VGPU-THREE-TSL-SOURCE-INVALID",
