@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, symlink, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -75,7 +75,7 @@ describe("wgslWebpackLoader (real webpack 5)", () => {
       optimization: { minimize: false },
     });
 
-    expect(stats.compilation.fileDependencies.has(helperWgsl)).toBe(true);
+    expect(stats.compilation.fileDependencies.has(await realpath(helperWgsl))).toBe(true);
   });
 
   it("emits fresh bundled WGSL when a transitive import changes between builds", async () => {

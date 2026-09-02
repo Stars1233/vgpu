@@ -94,6 +94,7 @@
     "streamdown": "^2.1.0",
     "tailwind-merge": "^3.4.0",
     "three": "^0.180.0",
+    "typegpu": "0.12.3",
     "use-stick-to-bottom": "^1.1.1",
     "vaul": "^1.1.2",
     "vgpu": "workspace:*",

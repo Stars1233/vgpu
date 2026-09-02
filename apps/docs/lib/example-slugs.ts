@@ -23,6 +23,7 @@ export const exampleSlugs = [
   'air-painting',
   'tsl-exports',
   'three-tsl',
+  'particle-orbit',
 ] as const;
 
 export type ExampleSlug = (typeof exampleSlugs)[number];
