@@ -31,7 +31,8 @@ const CLEAR = [0, 0, 0, 1] as const;
 const SCENE_FORMAT = 'rgba16float' as const;
 // 4 trails × (21 segments + 1 head halo).
 export const TRAIL_INSTANCES = 88;
-export const DUST_COUNT = 224;
+// Dense enough for each orbiting light to tint several motes as it passes.
+export const DUST_COUNT = 1024;
 
 const BLURS = [
   { direction: [1, 0], radius: 1 },

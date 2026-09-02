@@ -43,7 +43,6 @@ const dustMocks = vi.hoisted(() => ({
   create: vi.fn(),
 }));
 vi.mock('./dust', () => ({
-  DUST_COUNT: 224,
   createDust: dustMocks.create.mockImplementation(() => ({
     buffer: dustMocks.buffer,
     update: dustMocks.update,
