@@ -1,4 +1,3 @@
-import GUI from 'lil-gui';
 import {
   clock,
   frameLoop,
@@ -11,19 +10,15 @@ import {
 import {
   createEffects,
   createTargets,
-  DEFAULT_DUST_MODE,
   destroyTargets,
-  DUST_MODES,
   prewarm,
-  recordScenes,
+  recordScene,
   renderChain,
   setBindings,
   setPointer,
   setTime,
-  type DustMode,
 } from './pipeline';
 import { createDust, type Dust } from './dust';
-import { createDustVgpu, type DustVgpu } from './dust-vgpu';
 import {
   createRadiance,
   destroyRadiance,
@@ -49,11 +44,8 @@ export function createRenderer(options: RendererOptions) {
   let targets: ReturnType<typeof createTargets> | undefined;
   let radiance: Radiance | undefined;
   let dust: Dust | undefined;
-  let dustVgpu: DustVgpu | undefined;
   let dustBuffer: { dispose(): void } | undefined;
-  let scenes: Record<DustMode, Bundle> | undefined;
-  let mode: DustMode = DEFAULT_DUST_MODE;
-  let gui: GUI | undefined;
+  let scene: Bundle | undefined;
   let input: ReturnType<typeof installParallaxInput> | undefined;
   let observer: ResizeObserver | undefined;
   let resizeFrame = 0;
@@ -80,7 +72,6 @@ export function createRenderer(options: RendererOptions) {
         // Size-dependent (jump count, cascade count), rebuilt with the targets.
         nextRadiance = createRadiance(gpu, pixels);
         setBindings(effects, nextTargets, nextRadiance);
-        dustVgpu?.setLightField(nextRadiance.irradiance);
         dust?.setLightField(nextRadiance.irradiance.color.view);
         void prewarmRadiance(nextRadiance).catch(() => {});
       } catch (error) {
@@ -128,11 +119,9 @@ export function createRenderer(options: RendererOptions) {
       window.removeEventListener('resize', onWindowResize);
     }
     input?.dispose();
-    gui?.destroy();
     gpu?.dispose();
     dustBuffer?.dispose();
     dust?.destroy();
-    dustVgpu?.destroy();
   };
 
   const initialize = async () => {
@@ -152,13 +141,11 @@ export function createRenderer(options: RendererOptions) {
     effects = createEffects(gpu);
     targets = createTargets(gpu, canvasSurface.size);
     radiance = createRadiance(gpu, canvasSurface.size);
-    // Two authorings of the same simulation; the switch picks which one runs.
-    dustVgpu = createDustVgpu(gpu);
-    effects.starsVgpu.set({ particles: dustVgpu.particles });
+    // TypeGPU creates the simulation buffer on vgpu's device; vgpu wraps the
+    // same GPUBuffer for zero-copy rendering.
     dust = createDust(gpu.gpu as GPUDevice);
     dustBuffer = gpu.device.wrapBuffer(dust.buffer);
     effects.stars.set({ particles: dustBuffer });
-    dustVgpu.setLightField(radiance.irradiance);
     dust.setLightField(radiance.irradiance.color.view);
     setBindings(effects, targets, radiance);
     await Promise.all([
@@ -166,26 +153,7 @@ export function createRenderer(options: RendererOptions) {
       prewarmRadiance(radiance),
     ]);
     if (disposed) return;
-    // Record after prewarm; one bundle per dust mode.
-    scenes = recordScenes(gpu, effects);
-
-    gui = new GUI({
-      title: 'Boot Void',
-      container: options.canvas.parentElement ?? undefined,
-      width: 200,
-    });
-    Object.assign(gui.domElement.style, {
-      position: 'absolute',
-      top: '16px',
-      right: '16px',
-      zIndex: '10',
-    });
-    gui
-      .add({ mode }, 'mode', [...DUST_MODES])
-      .name('Dust')
-      .onChange((next: DustMode) => {
-        mode = next;
-      });
+    scene = recordScene(gpu, effects);
 
     input = installParallaxInput(options.canvas);
     observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(measure);
@@ -201,22 +169,17 @@ export function createRenderer(options: RendererOptions) {
         !targets ||
         !radiance ||
         !dust ||
-        !dustVgpu ||
         !canvasSurface ||
-        !scenes ||
+        !scene ||
         !input
       ) {
         return;
       }
       const aspect = targets.scene.size[0] / targets.scene.size[1];
-      if (mode === 'vgpu + TypeGPU') {
-        dust.update(gpuClock.time, gpuClock.deltaTime, aspect);
-      } else {
-        dustVgpu.update(gpuClock.time, gpuClock.deltaTime, aspect);
-      }
+      dust.update(gpuClock.time, gpuClock.deltaTime, aspect);
       setTime(effects, radiance, gpuClock.time);
       setPointer(effects, input.update());
-      renderChain(currentFrame, effects, targets, canvasSurface, scenes[mode], radiance);
+      renderChain(currentFrame, effects, targets, canvasSurface, scene, radiance);
     });
   };
 

@@ -40,11 +40,6 @@ export const GLASS_INSTANCES = 4;
 export const TRAIL_INSTANCES = 88;
 export const DUST_COUNT = 224;
 
-// One dust simulation, two authorings; each mode owns a buffer and a bundle.
-export const DUST_MODES = ['vgpu', 'vgpu + TypeGPU'] as const;
-export type DustMode = (typeof DUST_MODES)[number];
-export const DEFAULT_DUST_MODE: DustMode = 'vgpu';
-
 const BLURS = [
   { direction: [1, 0], radius: 1 },
   { direction: [0, 1], radius: 1 },
@@ -61,14 +56,6 @@ export function createEffects(gpu: Gpu) {
   } as const;
   return {
     nebula: effect(gpu, nebulaWgsl),
-    // Same shader twice; each mode binds its own particle buffer.
-    starsVgpu: draw(gpu, {
-      shader: starsWgsl,
-      vertices: 6,
-      instances: DUST_COUNT,
-      blend: additive,
-      label: 'boot-void-stars-vgpu',
-    }),
     stars: draw(gpu, {
       shader: starsWgsl,
       vertices: 6,
@@ -155,7 +142,6 @@ function destroy(color: Target | undefined): void {
 export function setBindings(effects: Effects, targets: Targets, radiance: Radiance): void {
   const aspect = targets.scene.size[0] / targets.scene.size[1];
   effects.nebula.set({ params: { aspect } });
-  effects.starsVgpu.set({ params: { aspect } });
   effects.stars.set({ params: { aspect } });
   effects.bars.set({ params: { aspect } });
   effects.glass.set({ params: { aspect } });
@@ -180,7 +166,6 @@ export function setBindings(effects: Effects, targets: Targets, radiance: Radian
 export function setTime(effects: Effects, radiance: Radiance, time: number): void {
   const params = { params: { time } };
   effects.nebula.set(params);
-  effects.starsVgpu.set(params);
   effects.stars.set(params);
   effects.bars.set(params);
   effects.glass.set(params);
@@ -197,7 +182,6 @@ export function setPointer(effects: Effects, pointer: readonly [number, number])
 export async function prewarm(effects: Effects, targets: Targets, output: Output): Promise<void> {
   await Promise.all([
     effects.nebula.compile(targets.scene),
-    effects.starsVgpu.compile(targets.scene),
     effects.stars.compile(targets.scene),
     effects.bars.compile(targets.scene),
     effects.glass.compile(targets.scene),
@@ -210,22 +194,17 @@ export async function prewarm(effects: Effects, targets: Targets, output: Output
 }
 
 // Bundles freeze the render signature, not the target, so they survive resizes.
-export function recordScenes(gpu: Gpu, effects: Effects): Record<DustMode, Bundle> {
-  const record = (stars: Effects['stars'], label: string) =>
-    bundle(
-      gpu,
-      { target: { colors: [SCENE_FORMAT], sampleCount: 4 }, label },
-      (pass) => {
-        pass.draw(effects.nebula);
-        pass.draw(stars);
-        pass.draw(effects.bars);
-        pass.draw(effects.glass);
-      },
-    );
-  return {
-    'vgpu': record(effects.starsVgpu, 'boot-void-scene-vgpu'),
-    'vgpu + TypeGPU': record(effects.stars, 'boot-void-scene-typegpu'),
-  };
+export function recordScene(gpu: Gpu, effects: Effects): Bundle {
+  return bundle(
+    gpu,
+    { target: { colors: [SCENE_FORMAT], sampleCount: 4 }, label: 'boot-void-scene' },
+    (pass) => {
+      pass.draw(effects.nebula);
+      pass.draw(effects.stars);
+      pass.draw(effects.bars);
+      pass.draw(effects.glass);
+    },
+  );
 }
 
 export function renderChain(

@@ -35,29 +35,6 @@ vi.mock('vgpu', () => ({
 }));
 vi.mock('vgpu/scene', () => ({ box: vi.fn(() => ({})) }));
 
-const guiMocks = vi.hoisted(() => ({
-  change: undefined as ((mode: string) => void) | undefined,
-  destroy: vi.fn(),
-}));
-vi.mock('lil-gui', () => ({
-  default: class MockGui {
-    domElement = { style: {} };
-    destroy = guiMocks.destroy;
-
-    add() {
-      return {
-        name() {
-          return this;
-        },
-        onChange(change: (mode: string) => void) {
-          guiMocks.change = change;
-          return this;
-        },
-      };
-    }
-  },
-}));
-
 const dustMocks = vi.hoisted(() => ({
   buffer: { label: 'typegpu-particles' },
   update: vi.fn(),
@@ -72,22 +49,6 @@ vi.mock('./dust', () => ({
     update: dustMocks.update,
     destroy: dustMocks.destroy,
     setLightField: dustMocks.setLightField,
-  })),
-}));
-
-const dustVgpuMocks = vi.hoisted(() => ({
-  particles: { label: 'vgpu-particles' },
-  update: vi.fn(),
-  destroy: vi.fn(),
-  setLightField: vi.fn(),
-  create: vi.fn(),
-}));
-vi.mock('./dust-vgpu', () => ({
-  createDustVgpu: dustVgpuMocks.create.mockImplementation(() => ({
-    particles: dustVgpuMocks.particles,
-    update: dustVgpuMocks.update,
-    destroy: dustVgpuMocks.destroy,
-    setLightField: dustVgpuMocks.setLightField,
   })),
 }));
 
@@ -247,24 +208,20 @@ test('builds the pipeline, records the scene bundle, drives time, and coalesces 
   expect(env.gpu.fns.frameLoop).toHaveBeenCalledOnce();
   // nebula, atmosphere, bright, 4× blur, post, plus the radiance chain.
   expect(env.gpu.fns.effect).toHaveBeenCalledTimes(8 + radianceEffectCount([200, 100]));
-  // two star variants, bars, glass, trails.
-  expect(env.gpu.fns.draw).toHaveBeenCalledTimes(5);
+  // stars, bars, glass, trails.
+  expect(env.gpu.fns.draw).toHaveBeenCalledTimes(4);
   expect(env.gpu.fns.geometry).toHaveBeenCalledOnce();
-  // One recorded bundle per dust mode, four draws each, after prewarm.
-  expect(env.gpu.fns.bundle).toHaveBeenCalledTimes(2);
-  expect(env.bundleRecorder.draw).toHaveBeenCalledTimes(8);
+  expect(env.gpu.fns.bundle).toHaveBeenCalledOnce();
+  expect(env.bundleRecorder.draw).toHaveBeenCalledTimes(4);
   expect(env.canvasListeners.has('pointermove')).toBe(true);
   // TypeGPU shares the device; its particle buffer is wrapped zero-copy.
   expect(dustMocks.create).toHaveBeenCalledWith(env.gpu.gpu);
   expect(env.gpu.device.wrapBuffer).toHaveBeenCalledWith(dustMocks.buffer);
   expect(dustMocks.setLightField).toHaveBeenCalledOnce();
-  expect(dustVgpuMocks.setLightField).toHaveBeenCalledOnce();
 
-  // The default mode is pure vgpu: its sim steps, the TypeGPU one stays
-  // frozen.
+  // TypeGPU advances the simulation; vgpu renders the wrapped buffer.
   env.runFrame();
-  expect(dustVgpuMocks.update).toHaveBeenCalledOnce();
-  expect(dustMocks.update).not.toHaveBeenCalled();
+  expect(dustMocks.update).toHaveBeenCalledOnce();
   for (const pipeline of env.draws) {
     expect(pipeline.set).toHaveBeenCalledWith({ params: { time: 0 } });
   }
@@ -276,16 +233,6 @@ test('builds the pipeline, records the scene bundle, drives time, and coalesces 
     expect(pipeline.set).toHaveBeenCalledWith({ params: { time: 0 } });
   }
   expect(post.set).toHaveBeenCalledWith({ params: { pointer: [0, 0] } });
-
-  // Switching modes swaps which simulation steps.
-  guiMocks.change?.('vgpu + TypeGPU');
-  env.runFrame();
-  expect(dustMocks.update).toHaveBeenCalledOnce();
-  expect(dustVgpuMocks.update).toHaveBeenCalledOnce();
-  guiMocks.change?.('vgpu');
-  env.runFrame();
-  expect(dustMocks.update).toHaveBeenCalledOnce();
-  expect(dustVgpuMocks.update).toHaveBeenCalledTimes(2);
 
   renderer.resize({ width: 300, height: 150, dpr: 1.6 });
   renderer.resize({ width: 400, height: 200, dpr: 1.6 });
@@ -299,11 +246,10 @@ test('builds the pipeline, records the scene bundle, drives time, and coalesces 
   for (const target of env.targetObjects.slice(GENERATION_TARGETS)) {
     expect(target.destroy).not.toHaveBeenCalled();
   }
-  // Resize swaps targets without re-recording the bundles, and rebinds
+  // Resize swaps targets without re-recording the bundle, and rebinds
   // the rebuilt light field into the TypeGPU simulation.
-  expect(env.gpu.fns.bundle).toHaveBeenCalledTimes(2);
+  expect(env.gpu.fns.bundle).toHaveBeenCalledOnce();
   expect(dustMocks.setLightField).toHaveBeenCalledTimes(2);
-  expect(dustVgpuMocks.setLightField).toHaveBeenCalledTimes(2);
 
   renderer.dispose();
   renderer.dispose();
@@ -315,8 +261,6 @@ test('builds the pipeline, records the scene bundle, drives time, and coalesces 
   expect(env.gpu.dispose).toHaveBeenCalledOnce();
   expect(env.wrappedBuffer.dispose).toHaveBeenCalledOnce();
   expect(dustMocks.destroy).toHaveBeenCalledOnce();
-  expect(dustVgpuMocks.destroy).toHaveBeenCalledOnce();
-  expect(guiMocks.destroy).toHaveBeenCalledOnce();
 });
 
 test('disposes a stale GPU initialization without creating resources', async () => {
@@ -355,7 +299,7 @@ test('thumbnail renders warmup frames against the offscreen graph', async () => 
   });
   expect(env.gpu.fns.frame).toHaveBeenCalledTimes(5);
   expect(dustMocks.update).toHaveBeenCalledTimes(5);
-  expect(env.gpu.fns.bundle).toHaveBeenCalledTimes(2);
+  expect(env.gpu.fns.bundle).toHaveBeenCalledOnce();
   expect(env.gpu.settled).toHaveBeenCalledOnce();
   expect(env.targetObjects).toHaveLength(GENERATION_TARGETS);
   for (const target of env.targetObjects) {

@@ -1,7 +1,6 @@
-// Same simulation as dust-vgpu.ts, authored with TypeGPU on the device vgpu
-// owns: the schemas are the single source for the 48-byte layout, injected
-// into the WGSL and checked at the bind group. The pipeline itself is plain
-// WebGPU.
+// TypeGPU authors the dust simulation on the device vgpu owns. Its schemas
+// define the buffer layout, generate the WGSL declarations, and type-check the
+// bind group; vgpu consumes the resulting GPUBuffer for rendering.
 import tgpu from 'typegpu';
 import * as d from 'typegpu/data';
 
@@ -57,8 +56,7 @@ export function initialParticles() {
   });
 }
 
-// The struct declarations come from the schemas above; the physics matches
-// dust-sim.wgsl.
+// The struct declarations come from the schemas above.
 export function simulationWgsl(): string {
   return tgpu.resolve({
     template: /* wgsl */ `

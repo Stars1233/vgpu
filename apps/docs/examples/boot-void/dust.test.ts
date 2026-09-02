@@ -2,7 +2,6 @@ import * as d from 'typegpu/data';
 import { expect, test } from 'vitest';
 
 import { initialParticles, Particle, simulationWgsl } from './dust';
-import { seedData } from './dust-vgpu';
 import { DUST_COUNT } from './pipeline';
 
 test('particle layout matches the WGSL struct the star shader declares', () => {
@@ -19,20 +18,6 @@ test('the resolved compute shader carries the generated declarations', () => {
   expect(wgsl).toContain('struct SimParams');
   expect(wgsl).toContain('var<storage, read_write> particles: array<Particle>');
   expect(wgsl).toContain('textureSampleLevel');
-});
-
-test('both authorings seed byte-identical particle fields', () => {
-  // dust-vgpu.ts packs the 48-byte layout by hand; TypeGPU derives it from
-  // the schema. Same values, same offsets, or the modes would not match.
-  const packed = seedData();
-  const typed = initialParticles();
-  expect(packed.length).toBe(DUST_COUNT * 12);
-  typed.forEach((particle, index) => {
-    const base = index * 12;
-    expect(packed[base]).toBeCloseTo(particle.position.x, 4);
-    expect(packed[base + 1]).toBeCloseTo(particle.position.y, 4);
-    expect(packed[base + 4]).toBeCloseTo(particle.seed, 6);
-  });
 });
 
 test('seeding is deterministic and bounded', () => {
