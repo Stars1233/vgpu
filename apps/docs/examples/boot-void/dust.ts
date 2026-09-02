@@ -69,8 +69,9 @@ export function simulationWgsl(): string {
       const HALF_HEIGHT_PX = 240.0;
 
       fn orbit(index: f32, time: f32) -> vec3f {
-        let angle = time * (0.38 + index * 0.04) + index * 1.5707963;
-        let radius = 0.92 + index * 0.12;
+        let radius = 0.62 + index * 0.34;
+        let speed = 0.56 - index * 0.07;
+        let angle = time * speed + index * 1.5707963;
         let tilt = -0.42 + index * 0.28;
         let local = vec2f(cos(angle) * radius, sin(angle) * radius * 0.62);
         let c = cos(tilt);
