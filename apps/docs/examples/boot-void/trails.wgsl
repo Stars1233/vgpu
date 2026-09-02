@@ -12,6 +12,8 @@ const HISTORY_DT = 1.0 / 60.0;
 const FOCAL_PX = 360.0;
 const HALF_HEIGHT_PX = 240.0;
 const HALO_RADIUS_PX = 7.0;
+const CORE_RADIUS_PX = 54.0;
+const CORE_FEATHER_PX = 18.0;
 
 fn orbit(index: f32, time: f32) -> vec3f {
   let radius = 0.62 + index * 0.34;
@@ -27,6 +29,16 @@ fn orbit(index: f32, time: f32) -> vec3f {
 
 fn project(p: vec3f) -> vec2f {
   return p.xy * (FOCAL_PX / max(p.z, 0.01));
+}
+
+fn coreVisibility(p: vec3f) -> f32 {
+  let behind = smoothstep(3.2, 3.32, p.z);
+  let core = 1.0 - smoothstep(
+    CORE_RADIUS_PX - CORE_FEATHER_PX,
+    CORE_RADIUS_PX + CORE_FEATHER_PX,
+    length(project(p)),
+  );
+  return 1.0 - behind * core;
 }
 
 fn clip(px: vec2f, aspect: f32) -> vec4f {
@@ -65,11 +77,12 @@ struct VertexOut {
 
   if (segment == POINTS - 1u) {
     // Head halo: a small screen-aligned quad with a radial falloff.
-    let head = project(orbit(f32(trail), params.time));
+    let headPosition = orbit(f32(trail), params.time);
+    let head = project(headPosition);
     let centered = vec2f(corner.x * 2.0 - 1.0, corner.y);
     out.position = clip(head + centered * HALO_RADIUS_PX, params.aspect);
     out.local = centered;
-    out.alpha = smoothstep(1.2, 2.4, params.time);
+    out.alpha = smoothstep(1.2, 2.4, params.time) * coreVisibility(headPosition);
     out.halo = 1.0;
     return out;
   }
@@ -77,15 +90,18 @@ struct VertexOut {
   let fade = 1.0 - f32(segment + 1u) / f32(POINTS);
   let t0 = params.time - f32(segment) * HISTORY_DT;
   let t1 = params.time - f32(segment + 1u) * HISTORY_DT;
-  let p0 = project(orbit(f32(trail), t0));
-  let p1 = project(orbit(f32(trail), t1));
+  let orbit0 = orbit(f32(trail), t0);
+  let orbit1 = orbit(f32(trail), t1);
+  let p0 = project(orbit0);
+  let p1 = project(orbit1);
   let dir = p1 - p0;
   let axis = dir / max(length(dir), 0.0001);
   let perp = vec2f(-axis.y, axis.x);
   let halfWidth = (1.4 * fade + 0.5) * 0.5;
   let px = mix(p0, p1, corner.x) + perp * halfWidth * corner.y;
   out.position = clip(px, params.aspect);
-  out.alpha = 0.85 * fade * fade * smoothstep(1.2, 2.4, params.time);
+  let visibility = mix(coreVisibility(orbit0), coreVisibility(orbit1), corner.x);
+  out.alpha = 0.85 * fade * fade * smoothstep(1.2, 2.4, params.time) * visibility;
   out.halo = 0.0;
   return out;
 }
