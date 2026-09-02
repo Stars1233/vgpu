@@ -145,7 +145,7 @@ function setup(options: { failCompile?: boolean } = {}) {
     dispose: vi.fn(),
     fns: {
       surface: vi.fn(() => surface),
-      target: vi.fn(() => {
+      target: vi.fn((_options: unknown) => {
         const target = {
           size: [200, 100],
           texelSize: [1 / 200, 1 / 100],
@@ -306,6 +306,22 @@ test('thumbnail renders warmup frames against the offscreen graph', async () => 
   }
   expect(env.wrappedBuffer.dispose).toHaveBeenCalledOnce();
   expect(dustMocks.destroy).toHaveBeenCalledOnce();
+});
+
+test('thumbnail keeps HDR but disables scene MSAA in compatibility mode', async () => {
+  const env = setup();
+  Object.assign(env.gpu.device, { isCompatibilityMode: true });
+  const output = { size: [160, 90], format: 'rgba8unorm' };
+
+  await renderThumbnail(env.gpu as never, output as never, { warmupFrames: 1 });
+
+  expect(env.gpu.fns.target.mock.calls[0]?.[0]).toMatchObject({
+    format: 'rgba16float',
+    msaa: false,
+  });
+  expect(env.gpu.fns.bundle.mock.calls[0]?.[0]).toMatchObject({
+    target: { colors: ['rgba16float'], sampleCount: 1 },
+  });
 });
 
 test('thumbnail destroys its target graph when prewarm fails', async () => {

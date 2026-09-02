@@ -85,8 +85,13 @@ export function createTargets(gpu: Gpu, size: readonly [number, number]) {
       bloomHeight,
     ];
     return {
-      // 4× MSAA: passes resolve into a sampleable single-sample color.
-      scene: own(target(gpu, { size, format: SCENE_FORMAT, msaa: true })),
+      // Compatibility mode cannot combine rgba16float with MSAA. Keep HDR and
+      // fall back to a single-sampled scene there; core WebGPU retains 4× MSAA.
+      scene: own(target(gpu, {
+        size,
+        format: SCENE_FORMAT,
+        msaa: !gpu.device.isCompatibilityMode,
+      })),
       composite: own(target(gpu, { size, format: SCENE_FORMAT })),
       bloom: [
         own(target(gpu, { size: bloomSize, format: SCENE_FORMAT })),
@@ -164,7 +169,13 @@ export async function prewarm(effects: Effects, targets: Targets, output: Output
 export function recordScene(gpu: Gpu, effects: Effects): Bundle {
   return bundle(
     gpu,
-    { target: { colors: [SCENE_FORMAT], sampleCount: 4 }, label: 'particle-orbit-scene' },
+    {
+      target: {
+        colors: [SCENE_FORMAT],
+        sampleCount: gpu.device.isCompatibilityMode ? 1 : 4,
+      },
+      label: 'particle-orbit-scene',
+    },
     (pass) => {
       pass.draw(effects.nebula);
       pass.draw(effects.stars);
