@@ -1719,6 +1719,7 @@ export const exampleSources = {
     "title": "Particle Orbit",
     "description": "A shared-device vgpu + TypeGPU experiment: TypeGPU advances light-seeking dust through a radiance field rendered by vgpu, then vgpu draws the same particle buffer zero-copy alongside orbiting lights, HDR bloom, and a CRT finish.",
     "tags": [
+      "typegpu",
       "instancing",
       "particles",
       "compute",

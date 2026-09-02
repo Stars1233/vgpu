@@ -43,5 +43,6 @@
   "simulation",
   "ssaa",
   "triangle",
+  "typegpu",
   "volumetric"
 ]
