@@ -29,8 +29,8 @@ type Output = Surface | Target;
 
 const CLEAR = [0, 0, 0, 1] as const;
 const SCENE_FORMAT = 'rgba16float' as const;
-// 4 trails × (63 history segments + 1 head halo).
-export const TRAIL_INSTANCES = 256;
+// 4 trails × (191 history segments + 1 head halo).
+export const TRAIL_INSTANCES = 768;
 // Dense enough for each orbiting light to tint several motes as it passes.
 export const DUST_COUNT = 1024;
 

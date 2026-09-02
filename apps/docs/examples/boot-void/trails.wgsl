@@ -6,7 +6,7 @@ struct Params {
 }
 @group(0) @binding(0) var<uniform> params: Params;
 
-const POINTS = 64u;
+const POINTS = 192u;
 // History spacing: the source pushed one point per 60Hz frame.
 const HISTORY_DT = 1.0 / 60.0;
 const FOCAL_PX = 360.0;
