@@ -22,7 +22,6 @@ import {
 } from './radiance';
 import blurWgsl from './blur.wgsl';
 import brightWgsl from './bright.wgsl';
-import fieldWgsl from './field.wgsl';
 import glassWgsl from './glass.wgsl';
 import nebulaWgsl from './nebula.wgsl';
 import postWgsl from './post.wgsl';
@@ -33,8 +32,6 @@ type Output = Surface | Target;
 
 const CLEAR = [0, 0, 0, 1] as const;
 const SCENE_FORMAT = 'rgba16float' as const;
-// 6×4 cluster cells, two bars per cell. The layout lives in field.wgsl.
-export const BAR_INSTANCES = 48;
 export const GLASS_INSTANCES = 4;
 // 4 trails × (21 segments + 1 head halo).
 export const TRAIL_INSTANCES = 88;
@@ -62,17 +59,6 @@ export function createEffects(gpu: Gpu) {
       instances: DUST_COUNT,
       blend: additive,
       label: 'boot-void-stars',
-    }),
-    // Alpha-blended painter's-order 3D: the source relied on draw order, so a
-    // depth buffer would change the look rather than preserve it.
-    bars: draw(gpu, {
-      shader: fieldWgsl,
-      geometry: cube,
-      instances: BAR_INSTANCES,
-      blend: 'alpha',
-      cull: 'back',
-      frontFace: 'cw',
-      label: 'boot-void-bars',
     }),
     glass: draw(gpu, {
       shader: glassWgsl,
@@ -143,7 +129,6 @@ export function setBindings(effects: Effects, targets: Targets, radiance: Radian
   const aspect = targets.scene.size[0] / targets.scene.size[1];
   effects.nebula.set({ params: { aspect } });
   effects.stars.set({ params: { aspect } });
-  effects.bars.set({ params: { aspect } });
   effects.glass.set({ params: { aspect } });
   effects.atmosphere.set({ src: targets.scene, params: { aspect } });
   effects.trails.set({ params: { aspect } });
@@ -167,7 +152,6 @@ export function setTime(effects: Effects, radiance: Radiance, time: number): voi
   const params = { params: { time } };
   effects.nebula.set(params);
   effects.stars.set(params);
-  effects.bars.set(params);
   effects.glass.set(params);
   effects.atmosphere.set(params);
   effects.trails.set(params);
@@ -183,7 +167,6 @@ export async function prewarm(effects: Effects, targets: Targets, output: Output
   await Promise.all([
     effects.nebula.compile(targets.scene),
     effects.stars.compile(targets.scene),
-    effects.bars.compile(targets.scene),
     effects.glass.compile(targets.scene),
     effects.atmosphere.compile(targets.composite),
     effects.trails.compile(targets.composite),
@@ -201,7 +184,6 @@ export function recordScene(gpu: Gpu, effects: Effects): Bundle {
     (pass) => {
       pass.draw(effects.nebula);
       pass.draw(effects.stars);
-      pass.draw(effects.bars);
       pass.draw(effects.glass);
     },
   );
