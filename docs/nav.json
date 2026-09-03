@@ -106,7 +106,9 @@
         "measuring",
         "optimize-pass",
         "shader-fix-its",
-        "performance-playbook"
+        "performance-playbook",
+        "adaptive-quality",
+        "shipping-to-production"
       ]
     },
     {
@@ -174,7 +176,9 @@
             "measuring",
             "optimize-pass",
             "shader-fix-its",
-            "performance-playbook"
+            "performance-playbook",
+            "adaptive-quality",
+            "shipping-to-production"
           ]
         },
         {

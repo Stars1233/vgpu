@@ -6,8 +6,8 @@ description: >-
   and /perf only as slim tooling subpaths. Bundles task guides and the API
   reference; load one doc at a time.
 vgpuVersion: 0.3.1
-gitSha: ecb9a0ddc121d0f00dc30f99d568daa297d80a43
-generatedAt: 2026-09-03T13:44:09.761Z
+gitSha: 50e07577a316fb938958efa264419958cc2204f2
+generatedAt: 2026-09-03T14:01:48.639Z
 ---
 
 # vgpu
@@ -18,6 +18,8 @@ doc you can load on demand with the CLI — **load only what you need, don't rea
 vgpu is layered: vgpu/core (thin WebGPU wrappers) → vgpu (main API with WGSL reflection) → vgpu/scene (geometry/camera helpers). Lower layers are always accessible and interoperable.
 
 Glossary: **Surface** means a canvas-backed render target (swapchain) created with `surface(gpu, canvas)`; do not confuse it with the general phrase ‘API surface’.
+
+Finishing, opening a PR, or calling a render done? Read **shipping-to-production** first (`references/guides/shipping-to-production.docs.md`).
 
 ```sh
 npx -y vgpu docs find <query>    # search doc paths + symbols
@@ -44,6 +46,7 @@ npx -y vgpu docs cat <symbol>    # print one doc, e.g. `cat Frame`, `cat perform
 
 Open the guide matching your task. For performance work, read **performance-model** first.
 
+- **Adaptive quality: switch render pipelines on GPU tier, battery, and FPS** — A hero or ambient background has to look great on a desktop GPU and still run on a three-year-old phone at 20% battery.  `references/guides/adaptive-quality.docs.md`
 - **WebGPU screenshots with agent-browser** — Use agent-browser to verify and capture vgpu previews that run WebGPU on Linux, including containers without a GPU.  `references/guides/agent-browser-webgpu.docs.md`
 - **Authoring shaders for performance** — Write WGSL so reflection can build stable layouts.  `references/guides/authoring-for-perf.docs.md`
 - **Browser testing with Playwright WebGPU** — Browser tests should exercise the same public API users copy: init(), surface(gpu, canvas, opts), explicit targets, and deterministic frame submiss…  `references/guides/browser-testing.docs.md`
@@ -65,6 +68,7 @@ Open the guide matching your task. For performance work, read **performance-mode
 - **Debugging shaders by extracting internal values** — A shader has no console.log.  `references/guides/shader-debugging.docs.md`
 - **Shader diagnostics and fix-its** — Use these messages as the self-correction map for generated shader code.  `references/guides/shader-fix-its.docs.md`
 - **The default workflow for developing shaders with vgpu** — Follow these eight steps in order every time you write or change a shader.  `references/guides/shader-workflow.docs.md`
+- **Shipping to production: the pre-PR checklist** — A render that looks right on the machine it was written on is halfway done.  `references/guides/shipping-to-production.docs.md`
 - **Practical texture-format matrix** — Choose a target format from the operations it must support, not just its channel precision.  `references/guides/texture-formats.docs.md`
 - **Use WGSL modules in three.js TSL** — vgpu can resolve a reusable WGSL module graph, and three.js TSL can call WGSL functions from node materials.  `references/guides/threejs.docs.md`
 - **Two-pass rendering: offscreen depth target composited to the canvas** — Surfaces and canvases have no depth buffer, and Draws need one for any real 3D scene.  `references/guides/two-pass-rendering.docs.md`

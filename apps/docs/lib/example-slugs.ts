@@ -24,6 +24,7 @@ export const exampleSlugs = [
   'tsl-exports',
   'three-tsl',
   'particle-orbit',
+  'adaptive-quality',
 ] as const;
 
 export type ExampleSlug = (typeof exampleSlugs)[number];
