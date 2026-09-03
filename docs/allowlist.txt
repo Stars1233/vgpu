@@ -37,6 +37,7 @@ vgpu Visibility packages/vgpu-api/src/visibility.docs.md
 vgpu VisibilityOptions packages/vgpu-api/src/visibility.docs.md
 vgpu VisibilityQuery packages/vgpu-api/src/visibility.docs.md
 vgpu/three tslExports packages/vgpu-api/src/three/tsl-exports.docs.md
+vgpu/three TslExportsErrorCode packages/vgpu-api/src/three/tsl-exports.docs.md
 vgpu/core Device packages/core/src/device.docs.md
 vgpu/core DeviceOptions packages/core/src/device.docs.md
 vgpu/core CreateDeviceOptions packages/core/src/device.docs.md

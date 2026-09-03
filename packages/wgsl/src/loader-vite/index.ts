@@ -1,7 +1,8 @@
 import { assertNoErrorDiagnostics } from "../loader-shared/diagnostics.ts";
 import { shaderSourceModule } from "../loader-shared/emit.ts";
-import { hasDirectFunctionExport, singleSourceModule } from "../loader-shared/source.ts";
+import { hasDirectFunctionExport } from "../loader-shared/source.ts";
 import { applyMinifyWgsl, type MinifyOption } from "../runtime/minify.ts";
+import { withEntrySource } from "../runtime/package-resolution.ts";
 import { reservedIdentifierDiagnosticsForSource } from "../runtime/reserved-identifiers.ts";
 import { resolveShader } from "../runtime/resolve-shader.ts";
 import { hasTopLevelImport } from "../runtime/scanner.ts";
@@ -39,13 +40,12 @@ export async function transformWgsl(sourceOrOpts: string | TransformWgslOptions,
     const wgsl = applyMinifyWgsl(opts.source, opts.minify);
     return { code: shaderSourceModule(wgsl), map: null };
   }
-  const resolved = await resolveShader({
+  const resolved = await resolveShader(withEntrySource({
     entry: opts.id,
     validate: false,
     minify: opts.minify,
     onDependency: opts.onDependency,
-    ...(exportedLeaf ? { modules: singleSourceModule(opts.id, opts.source) } : {}),
-  });
+  }, opts.source));
   assertNoErrorDiagnostics(resolved.diagnostics, opts.id);
   return { code: shaderSourceModule(resolved.wgsl, resolved.functionExports), map: null };
 }

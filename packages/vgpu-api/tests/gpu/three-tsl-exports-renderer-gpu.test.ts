@@ -45,8 +45,7 @@ fn shadeColor(baseColor: vec3f) -> vec3f {
   return baseColor * vec3f(0.8, 0.6, 0.4);
 }
 `,
-        ["shadeColor"],
-      );
+      )("shadeColor");
       material.colorNode = shadeColor({ baseColor: vec3(1, 1, 1) });
 
       const scene = new THREE.Scene();

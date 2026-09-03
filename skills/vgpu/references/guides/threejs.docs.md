@@ -6,6 +6,7 @@ summary: Turn pure functions from vgpu-resolved WGSL modules into callable three
 keywords: three.js, threejs, tsl, three shader language, node material, meshphysicalnodematerial, webgpurenderer, wgslfn, tslExports, wgsl modules
 relatedSymbols:
   - tslExports
+  - TslExportsErrorCode
   - ShaderSource
   - ShaderFunctionExport
 ---
@@ -100,8 +101,7 @@ type SurfaceExports = {
 
 const { surfaceColor, surfaceRoughness } = tslExports<SurfaceExports>(
   surfaceModule,
-  ["surfaceColor", "surfaceRoughness"],
-);
+)("surfaceColor", "surfaceRoughness");
 
 const inputs = {
   position: positionLocal,
@@ -115,15 +115,17 @@ material.roughnessNode = surfaceRoughness(inputs);
 
 Each returned function accepts one object keyed by the authored WGSL parameter names. Values can be Three TSL nodes or JavaScript numbers, matching `wgslFn()`.
 
-Request functions that share a material in one `tslExports()` call. The adapter creates one shared `wgsl()` include for the resolved module and one small forwarding function for each requested export.
+Request functions that share a material with one selector call. `tslExports(surfaceModule)` creates one shared `wgsl()` include for the resolved module; its selector creates one small forwarding function for each positional export name.
 
 ## Add a manual TypeScript contract
 
-The names array gives the returned object typed properties, but a normal `.wgsl` import does not carry a file-specific TypeScript signature. By default, each callable therefore accepts any named object of Three nodes or numbers.
+The positional export names give the returned object typed properties, but a normal `.wgsl` import does not carry a file-specific TypeScript signature. By default, each callable therefore accepts any named object of Three nodes or numbers.
 
 Defining a manual contract next to each `tslExports()` call, as in the primary example above, is the recommended practice for application code and examples. TypeScript then checks selected names and input objects against the contract you wrote. For example, omitting `timeSeconds` from the `surfaceColor()` call above becomes a type error.
 
-The contract is a compile-time assertion; TypeScript does not compare it with the WGSL. Keep its keys exactly equal to the `names` selection and keep both aligned with the shader declarations. TypeScript rejects a selected name outside the contract, but it cannot prove that every contract key was selected or that a contract name exists in the shader. Three's general `Node` type also does not prove WGSL distinctions such as `f32` versus `vec3f`. The shader artifact and Three's shader builder remain the runtime authorities.
+The contract is a compile-time assertion; TypeScript does not compare it with the WGSL. A contract may describe the complete module while a selector requests only the subset it needs. TypeScript rejects a selected name outside the contract and does not expose unselected keys, but it cannot prove that a contract name exists in the shader. Three's general `Node` type also does not prove WGSL distinctions such as `f32` versus `vec3f`. The shader artifact and Three's shader builder remain the runtime authorities.
+
+Use literal positional names as shown above. If names already live in an array, declare it `as const` and spread it into the selector so TypeScript preserves the exact returned keys. A union-valued name produces a union of possible result objects; narrow it with a property check such as `"surfaceColor" in selected` before calling that property.
 
 ## Keep the complete artifact
 
@@ -134,10 +136,10 @@ import { tslExports } from "vgpu/three";
 import surfaceModule from "./surface.wgsl";
 
 // Correct: keeps exported-function identity produced by the loader.
-const { surfaceColor } = tslExports(surfaceModule, ["surfaceColor"]);
+const { surfaceColor } = tslExports(surfaceModule)("surfaceColor");
 
 // Avoid: this drops the resolver's authored-to-minified references.
-const { surfaceColor: broken } = tslExports(surfaceModule.wgsl, ["surfaceColor"]);
+const { surfaceColor: broken } = tslExports(surfaceModule.wgsl)("surfaceColor");
 ```
 
 Identifier minification is fully supported when you pass the full artifact. The resolver records each authored export name, its authored parameter names, and the corresponding declaration name in the minified WGSL. Passing only the emitted string discards those references; that compatibility path is limited to hand-written or legacy WGSL whose identifiers have not changed.
@@ -156,7 +158,7 @@ Only direct `export fn` declarations in the resolved graph become addressable:
 
 ## Errors
 
-`tslExports()` throws an error with a stable `code` when it cannot create the requested callable. Match `error.code`; no adapter-specific error class or `instanceof` contract is exported.
+`tslExports()` throws an error with a stable `code` when it cannot create the requested callable. Match `error.code`; no adapter-specific error class or `instanceof` contract is exported. Import the type-only `TslExportsErrorCode` union from `vgpu/three` when a helper accepts or exhaustively handles these codes.
 
 | Code | Meaning | Fix |
 | --- | --- | --- |

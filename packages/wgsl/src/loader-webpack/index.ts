@@ -1,8 +1,9 @@
 import { assertNoErrorDiagnostics } from "../loader-shared/diagnostics.ts";
 import { shaderSourceModule } from "../loader-shared/emit.ts";
-import { hasDirectFunctionExport, singleSourceModule } from "../loader-shared/source.ts";
+import { hasDirectFunctionExport } from "../loader-shared/source.ts";
 import { wgslError } from "../runtime/errors.ts";
 import { applyMinifyWgsl, type MinifyOption } from "../runtime/minify.ts";
+import { withEntrySource } from "../runtime/package-resolution.ts";
 import { reservedIdentifierDiagnosticsForSource } from "../runtime/reserved-identifiers.ts";
 import { resolveShader } from "../runtime/resolve-shader.ts";
 import { hasTopLevelImport } from "../runtime/scanner.ts";
@@ -33,14 +34,13 @@ export default function wgslWebpackLoader(this: LoaderContext, source: string): 
   }
   const done = this.async?.();
   const run = async () => {
-    const resolved = await resolveShader({
+    const resolved = await resolveShader(withEntrySource({
       entry: path,
       validate: false,
       minify: options.minify,
-      ...(exportedLeaf ? { modules: singleSourceModule(path, source) } : {}),
       // Register each import as soon as it is discovered so a failed resolution remains watchable.
       onDependency: (dep) => this.addDependency?.(dep),
-    });
+    }, source));
     assertNoErrorDiagnostics(resolved.diagnostics, path);
     return shaderSourceModule(resolved.wgsl, resolved.functionExports);
   };

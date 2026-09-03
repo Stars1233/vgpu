@@ -5,8 +5,7 @@ import { tslExports } from "vgpu/three";
 test("turns a raw WGSL function into a callable Three node", () => {
   const { doubleValue } = tslExports(
     "fn doubleValue(value: f32) -> f32 { return value * 2.0; }",
-    ["doubleValue"],
-  );
+  )("doubleValue");
 
   expect(doubleValue({ value: 2 })).toMatchObject({ isNode: true });
 });
@@ -17,7 +16,7 @@ fn _vgpu_three_0(value: f32) -> f32 { return value; }
 fn surfaceValue(value: f32) -> f32 { return _vgpu_three_0(value); }
 `;
 
-  expect(errorCode(() => tslExports(source, ["surfaceValue"]))).toBe(
+  expect(errorCode(() => tslExports(source)("surfaceValue"))).toBe(
     "VGPU-THREE-TSL-SOURCE-INVALID",
   );
 });
@@ -35,7 +34,7 @@ export fn surfaceValue(value: f32) -> f32 { return value; }
     },
   });
 
-  expect(errorCode(() => tslExports(source, ["surfaceValue"]))).toBe(
+  expect(errorCode(() => tslExports(source)("surfaceValue"))).toBe(
     "VGPU-THREE-TSL-SIGNATURE-UNSUPPORTED",
   );
 });
@@ -47,7 +46,7 @@ enable f16;
 fn surfaceValue(value: f32) -> f32 { return value; }
 `;
 
-  expect(errorCode(() => tslExports(source, ["surfaceValue"]))).toBe(
+  expect(errorCode(() => tslExports(source)("surfaceValue"))).toBe(
     "VGPU-THREE-TSL-SIGNATURE-UNSUPPORTED",
   );
 });
@@ -59,7 +58,7 @@ requires readonly_and_readwrite_storage_textures;
 fn surfaceValue(value: f32) -> f32 { return value; }
 `;
 
-  expect(errorCode(() => tslExports(source, ["surfaceValue"]))).toBe(
+  expect(errorCode(() => tslExports(source)("surfaceValue"))).toBe(
     "VGPU-THREE-TSL-SIGNATURE-UNSUPPORTED",
   );
 });
@@ -83,7 +82,7 @@ fn surfaceValue(value: f32) -> f32 {
   ];
 
   const nodes = sources.map((source) => {
-    const { surfaceValue } = tslExports(source, ["surfaceValue"]);
+    const { surfaceValue } = tslExports(source)("surfaceValue");
     return surfaceValue({ value: 2 });
   });
 
@@ -96,7 +95,7 @@ test("finds resolver-mangled functions in legacy shader artifacts", () => {
     wgsl: "fn _vgsl_deadbeef__doubleValue(value: f32) -> f32 { return value * 2.0; }",
   };
 
-  const { doubleValue } = tslExports(legacyArtifact, ["doubleValue"]);
+  const { doubleValue } = tslExports(legacyArtifact)("doubleValue");
 
   expect(doubleValue({ value: 2 })).toMatchObject({ isNode: true });
 });
@@ -107,7 +106,7 @@ test("treats an empty function export list as authoritative", () => {
     functionExports: [],
   };
 
-  expect(errorCode(() => tslExports(artifact, ["privateValue"]))).toBe(
+  expect(errorCode(() => tslExports(artifact)("privateValue"))).toBe(
     "VGPU-THREE-TSL-EXPORT-NOT-FOUND",
   );
 });
@@ -124,7 +123,7 @@ fn secondValue(value: f32) -> f32 { return value; }
     ],
   };
 
-  expect(errorCode(() => tslExports(artifact, ["surfaceValue"]))).toBe(
+  expect(errorCode(() => tslExports(artifact)("surfaceValue"))).toBe(
     "VGPU-THREE-TSL-EXPORT-AMBIGUOUS",
   );
 });
@@ -139,7 +138,7 @@ test("reports malformed export metadata as an invalid source", () => {
     }],
   };
 
-  expect(errorCode(() => tslExports(artifact, ["surfaceValue"]))).toBe(
+  expect(errorCode(() => tslExports(artifact)("surfaceValue"))).toBe(
     "VGPU-THREE-TSL-SOURCE-INVALID",
   );
 });
@@ -163,7 +162,7 @@ test("reports unreadable export metadata as an invalid source", () => {
     functionExports: [unreadable],
   };
 
-  expect(errorCode(() => tslExports(artifact, ["surfaceValue"]))).toBe(
+  expect(errorCode(() => tslExports(artifact)("surfaceValue"))).toBe(
     "VGPU-THREE-TSL-SOURCE-INVALID",
   );
 });
@@ -190,18 +189,16 @@ test("rejects invalid authored and resolved identifiers in export metadata", () 
     },
   ];
 
-  const codes = invalidArtifacts.map((artifact) => errorCode(() => tslExports(
-    artifact,
-    [artifact.requestedName],
-  )));
+  const codes = invalidArtifacts.map((artifact) => errorCode(
+    () => tslExports(artifact)(artifact.requestedName),
+  ));
   expect(codes).toEqual(invalidArtifacts.map(() => "VGPU-THREE-TSL-SOURCE-INVALID"));
 });
 
 test("returns exports in a null-prototype map", () => {
   const exports = tslExports(
     "fn surfaceValue(value: f32) -> f32 { return value; }",
-    ["surfaceValue"],
-  );
+  )("surfaceValue");
 
   expect(Object.getPrototypeOf(exports)).toBeNull();
   expect(Object.hasOwn(exports, "surfaceValue")).toBe(true);
@@ -222,7 +219,7 @@ fn laterValue(value: f32) -> f32 { return value; }`,
       resolvedName: "finalValue",
       parameterNames: ["value"],
     }],
-  }, ["surfaceValue"])));
+  })("surfaceValue")));
 
   expect(codes).toEqual(malformedSources.map(() => "VGPU-THREE-TSL-SOURCE-INVALID"));
 });
@@ -246,7 +243,7 @@ test("rejects void and shader-stage functions as unsupported signatures", () => 
   ];
 
   expect(unsupported.map((artifact) => errorCode(
-    () => tslExports(artifact, [artifact.name]),
+    () => tslExports(artifact)(artifact.name),
   ))).toEqual([
     "VGPU-THREE-TSL-SIGNATURE-UNSUPPORTED",
     "VGPU-THREE-TSL-SIGNATURE-UNSUPPORTED",
@@ -269,7 +266,7 @@ fn sampleField(samples: array<vec2<f32>, 2>, scale: f32) -> f32 {
     }],
   };
 
-  const { sampleField } = tslExports(artifact, ["sampleField"]);
+  const { sampleField } = tslExports(artifact)("sampleField");
 
   expect(sampleField({ samples: 0, scale: 2 })).toMatchObject({ isNode: true });
 });
@@ -297,7 +294,7 @@ export fn scaleValue(authoredValue: f32, authoredScale: f32) -> f32 {
     },
   ]);
 
-  const { scaleValue } = tslExports(resolved, ["scaleValue"]);
+  const { scaleValue } = tslExports(resolved)("scaleValue");
   expect(scaleValue({ authoredValue: 2, authoredScale: 3 })).toMatchObject({
     isNode: true,
   });

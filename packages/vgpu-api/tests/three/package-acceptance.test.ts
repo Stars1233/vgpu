@@ -35,7 +35,7 @@ test("the packed vgpu/three export creates a callable Three node", () => {
     [
       'import { tslExports } from "vgpu/three";',
       'const source = "fn doubleValue(value: f32) -> f32 { return value * 2.0; }";',
-      'const { doubleValue } = tslExports(source, ["doubleValue"]);',
+      'const { doubleValue } = tslExports(source)("doubleValue");',
       "if (doubleValue({ value: 2 }).isNode !== true) throw new Error(\"expected a Three node\");",
       'process.stdout.write("ok\\n");',
       "",
@@ -90,15 +90,34 @@ test("the packed types support the manual interface contract in NodeNext", () =>
       "    position: Node;",
       "    timeSeconds: Node | number;",
       "  };",
+      "  surfaceRoughness: {",
+      "    position: Node;",
+      "  };",
       "}",
       "",
       "declare const position: Node;",
       'const source = "fn surfaceColor(position: vec3f, timeSeconds: f32) -> vec3f { return position * timeSeconds; }";',
-      'const { surfaceColor } = tslExports<SurfaceExports>(source, ["surfaceColor"]);',
+      'const functions = tslExports<SurfaceExports>(source)("surfaceColor");',
+      "const { surfaceColor } = functions;",
       "surfaceColor({ position, timeSeconds: 1 });",
       "",
       "// @ts-expect-error — timeSeconds is required by the manual contract.",
       "surfaceColor({ position });",
+      "",
+      "// @ts-expect-error — unselected contract keys are absent.",
+      "functions.surfaceRoughness({ position });",
+      "",
+      "declare const selectedName: keyof SurfaceExports;",
+      "const unionFunctions = tslExports<SurfaceExports>(source)(selectedName);",
+      "// @ts-expect-error — a union-valued name cannot guarantee surfaceColor is present.",
+      "unionFunctions.surfaceColor({ position, timeSeconds: 1 });",
+      'if ("surfaceColor" in unionFunctions) unionFunctions.surfaceColor({ position, timeSeconds: 1 });',
+      "",
+      "declare const dynamicNames: Array<keyof SurfaceExports>;",
+      "const dynamicFunctions = tslExports<SurfaceExports>(source)(...dynamicNames);",
+      "// @ts-expect-error — widened selections cannot guarantee a key is present.",
+      "dynamicFunctions.surfaceColor({ position, timeSeconds: 1 });",
+      "dynamicFunctions.surfaceColor?.({ position, timeSeconds: 1 });",
       "",
     ].join("\n"),
   );
@@ -116,6 +135,49 @@ test("the packed types support the manual interface contract in NodeNext", () =>
         lib: ["ES2022", "DOM"],
       },
       include: ["types-consumer.ts"],
+    }, null, 2)}\n`,
+  );
+
+  const diagnostics = compileTsconfig(tsconfigPath);
+  if (diagnostics.length > 0) throw new Error(formatDiagnostics(diagnostics));
+  expect(diagnostics).toHaveLength(0);
+});
+
+test("the packed vgpu/three types expose stable error codes in NodeNext", () => {
+  attachThreePeer();
+  attachTypeDependencies();
+  writeFileSync(
+    join(fixture.root, "package.json"),
+    `${JSON.stringify({ name: "vgpu-three-error-types-consumer", private: true, type: "module" }, null, 2)}\n`,
+  );
+  writeFileSync(
+    join(fixture.root, "error-types-consumer.ts"),
+    [
+      'import type { TslExportsErrorCode } from "vgpu/three";',
+      "",
+      'const knownCode: TslExportsErrorCode = "VGPU-THREE-TSL-SOURCE-INVALID";',
+      "void knownCode;",
+      "",
+      "// @ts-expect-error — unrelated error codes are not part of the public union.",
+      'const unknownCode: TslExportsErrorCode = "VGPU-OTHER-ERROR";',
+      "void unknownCode;",
+      "",
+    ].join("\n"),
+  );
+  const tsconfigPath = join(fixture.root, "error-types-tsconfig.json");
+  writeFileSync(
+    tsconfigPath,
+    `${JSON.stringify({
+      compilerOptions: {
+        target: "ES2022",
+        module: "NodeNext",
+        moduleResolution: "NodeNext",
+        strict: true,
+        noEmit: true,
+        skipLibCheck: false,
+        lib: ["ES2022", "DOM"],
+      },
+      include: ["error-types-consumer.ts"],
     }, null, 2)}\n`,
   );
 

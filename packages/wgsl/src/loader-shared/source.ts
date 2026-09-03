@@ -1,4 +1,3 @@
-import { normalize } from "node:path";
 import { scan, type Token } from "../runtime/scanner.ts";
 
 export function hasDirectFunctionExport(source: string, path: string): boolean {
@@ -14,11 +13,6 @@ export function hasDirectFunctionExport(source: string, path: string): boolean {
     if (token.text === "export" && tokenAfterExport(tokens, i)?.text === "fn") return true;
   }
   return false;
-}
-
-export function singleSourceModule(path: string, source: string): Record<string, string> {
-  const normalizedPath = normalize(path).replace(/\\/gu, "/");
-  return { [normalizedPath]: source };
 }
 
 function tokenAfterExport(tokens: readonly Token[], exportIndex: number): Token | undefined {

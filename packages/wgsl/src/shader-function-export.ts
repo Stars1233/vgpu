@@ -24,7 +24,8 @@ function areValidParameterNames(value: unknown): value is readonly string[] {
   if (!Array.isArray(value)) return false;
 
   const names = new Set<string>();
-  for (const parameterName of value) {
+  for (let index = 0; index < value.length; index++) {
+    const parameterName = value[index];
     if (!isIdentifier(parameterName) || names.has(parameterName)) return false;
     names.add(parameterName);
   }

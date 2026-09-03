@@ -69,14 +69,14 @@ const {
   bakeDisplacement,
   bakeMicroDetail,
   bakeSharpDetail,
-} = tslExports<LavaBakeExports>(lavaModule, [
+} = tslExports<LavaBakeExports>(lavaModule)(
   "bakeGlow",
   "bakeSurfaceA",
   "bakeSurfaceB",
   "bakeDisplacement",
   "bakeMicroDetail",
   "bakeSharpDetail",
-]);
+);
 
 export interface LavaFieldVolumes {
   /** x = sqrt(heat/1.6) sans seep, y = melt mask, z = pulse phase, w = sqrt(fringe/1.4). */

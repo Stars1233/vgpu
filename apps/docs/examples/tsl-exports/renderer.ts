@@ -11,9 +11,9 @@ type SurfaceExports = {
   };
 };
 
-const { surfaceColor } = tslExports<SurfaceExports>(surfaceModule, [
+const { surfaceColor } = tslExports<SurfaceExports>(surfaceModule)(
   "surfaceColor",
-]);
+);
 
 export interface DemoScene {
   readonly scene: THREE.Scene;

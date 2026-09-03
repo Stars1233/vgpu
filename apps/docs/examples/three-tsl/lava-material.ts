@@ -28,10 +28,10 @@ type LavaMaterialExports = {
   perlin3: { position: Node };
 };
 
-const { blackbody, perlin3 } = tslExports<LavaMaterialExports>(lavaModule, [
+const { blackbody, perlin3 } = tslExports<LavaMaterialExports>(lavaModule)(
   "blackbody",
   "perlin3",
-]);
+);
 
 export interface LavaMaterialOptions {
   /** Pre-baked field volumes from `bakeLavaVolumes`. */

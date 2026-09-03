@@ -14,7 +14,7 @@ it("adapts the complete lava artifact through the public vgpu/three API", () => 
   });
   expect(lavaModule.wgsl).not.toMatch(/\bexport\b/u);
 
-  const nodes = tslExports(lavaModule, names);
+  const nodes = tslExports(lavaModule)(...names);
   for (const name of names) expect(typeof nodes[name]).toBe("function");
   expect(nodes.lavaGlow({ position: vec3(0, 0, 0), t: 6 }).isNode).toBe(true);
 });
@@ -154,7 +154,7 @@ describe("periodic detail-bake contract", () => {
     const exportedNames = (noiseModule.functionExports ?? []).map((item) => item.name);
 
     expect(exportedNames).toEqual(expect.arrayContaining([...names]));
-    const nodes = tslExports(noiseModule, names);
+    const nodes = tslExports(noiseModule)(...names);
     for (const name of names) expect(typeof nodes[name]).toBe("function");
   });
 

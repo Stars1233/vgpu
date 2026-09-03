@@ -10,12 +10,10 @@ const dockerGpuTest = test.skipIf(process.env.VGPU_DOCKER_TEST !== "1");
 dockerGpuTest("combines disjoint WGSL modules from separate adapter calls", async () => {
   const { brighten } = tslExports(
     "fn brighten(value: f32) -> f32 { return value + 0.25; }",
-    ["brighten"],
-  );
+  )("brighten");
   const { darken } = tslExports(
     "fn darken(value: f32) -> f32 { return value - 0.25; }",
-    ["darken"],
-  );
+  )("darken");
   const combined = add(
     brighten({ value: float(0.5) }),
     darken({ value: float(0.5) }),
@@ -26,8 +24,7 @@ dockerGpuTest("combines disjoint WGSL modules from separate adapter calls", asyn
 dockerGpuTest("forwards a function whose parameter has the same name as its call target", async () => {
   const { foo } = tslExports(
     "fn foo(foo: f32) -> f32 { return foo; }",
-    ["foo"],
-  );
+  )("foo");
   const call = foo({ foo: float(2) });
   await expectDawnCompiles(call);
 });
@@ -37,8 +34,7 @@ dockerGpuTest("forwards token-rich WGSL parameter types through Dawn", async () 
     `fn sumValues(values: array<f32, 1 << 2>,) -> f32 {
   return values[0] + values[1] + values[2] + values[3];
 }`,
-    ["sumValues"],
-  );
+  )("sumValues");
   const call = sumValues({
     values: array([float(1), float(2), float(3), float(4)]),
   });
@@ -50,8 +46,7 @@ dockerGpuTest("forwards a template constant expression containing less-than", as
     `fn firstValue(values: array<f32, select(2u, 1u, 1u < 2u)>) -> f32 {
   return values[0];
 }`,
-    ["firstValue"],
-  );
+  )("firstValue");
 
   await expectDawnCompiles(firstValue({ values: array([float(1)]) }));
 });
@@ -59,8 +54,7 @@ dockerGpuTest("forwards a template constant expression containing less-than", as
 dockerGpuTest("forwards a parameter with comment trivia between its name and colon", async () => {
   const { identity } = tslExports(
     "fn identity(value /* authored name */: f32) -> f32 { return value; }",
-    ["identity"],
-  );
+  )("identity");
 
   await expectDawnCompiles(identity({ value: float(1) }));
 });
@@ -68,8 +62,7 @@ dockerGpuTest("forwards a parameter with comment trivia between its name and col
 dockerGpuTest("forwards a parameter with comment trivia after its colon", async () => {
   const { identity } = tslExports(
     "fn identity(value: /* scalar type */ f32) -> f32 { return value; }",
-    ["identity"],
-  );
+  )("identity");
 
   await expectDawnCompiles(identity({ value: float(1) }));
 });
@@ -77,8 +70,7 @@ dockerGpuTest("forwards a parameter with comment trivia after its colon", async 
 dockerGpuTest("ignores comment trivia after a trailing parameter comma", async () => {
   const { identity } = tslExports(
     "fn identity(value: f32, /* trailing comma */) -> f32 { return value; }",
-    ["identity"],
-  );
+  )("identity");
 
   await expectDawnCompiles(identity({ value: float(1) }));
 });
@@ -94,8 +86,7 @@ fn surfaceValue(value: f32) -> f32 {
   return identityValue(value);
 }
 `,
-    ["surfaceValue"],
-  );
+  )("surfaceValue");
   const call = surfaceValue({ value: float(2) });
 
   const builder = new WGSLNodeBuilder(null, {});

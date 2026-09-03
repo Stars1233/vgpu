@@ -3,8 +3,8 @@ import { add, float } from "three/tsl";
 import { expect, test } from "vitest";
 import { tslExports } from "vgpu/three";
 
-test("emits one shared WGSL module when two exports feed one shader", () => {
-  const { brighten, darken } = tslExports(
+test("reuses one shared WGSL module across selector calls", () => {
+  const select = tslExports(
     `
 fn sharedCurve(value: f32) -> f32 {
   return value * value;
@@ -18,8 +18,9 @@ fn darken(value: f32) -> f32 {
   return sharedCurve(value) - 0.25;
 }
 `,
-    ["brighten", "darken"],
   );
+  const { brighten } = select("brighten");
+  const { darken } = select("darken");
   const combined = add(
     brighten({ value: float(0.5) }),
     darken({ value: float(0.5) }),
@@ -38,8 +39,7 @@ fn darken(value: f32) -> f32 {
 test("preserves a primitive input for a single-parameter function", () => {
   const { doubleValue } = tslExports(
     "fn doubleValue(value: f32) -> f32 { return value * 2.0; }",
-    ["doubleValue"],
-  );
+  )("doubleValue");
 
   const builder = new WGSLNodeBuilder(null, {});
   builder.setShaderStage("fragment");

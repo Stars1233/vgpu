@@ -176,6 +176,10 @@ function nextCodeToken(tokens: readonly Token[], start: number): number {
 }
 
 function isCommentToken(token: Token): boolean { return token.kind === "lineComment" || token.kind === "blockComment"; }
+function attributeNameAt(tokens: readonly Token[], atIndex: number): string | undefined {
+  if (tokens[atIndex]?.text !== "@") return undefined;
+  return tokens[nextCodeToken(tokens, atIndex + 1)]?.text;
+}
 function isVisible(kind: string, module: MangleModule, name: string): boolean { return kind === "override" || isEntryPoint(module, name) || isBindingVar(module, name); }
 function isBindingVar(module: MangleModule, name: string): boolean {
   for (let i = 0; i < module.tokens.length; i++) {
@@ -183,7 +187,7 @@ function isBindingVar(module: MangleModule, name: string): boolean {
     const nameIndex = varNameIndex(module.tokens, i);
     if (module.tokens[nameIndex]?.text !== name) continue;
     for (let j = i - 1; j >= 0 && module.tokens[j]?.text !== ";" && module.tokens[j]?.text !== "}"; j--) {
-      if (module.tokens[j]?.text === "@" && ["group", "binding"].includes(module.tokens[j + 1]?.text ?? "")) return true;
+      if (["group", "binding"].includes(attributeNameAt(module.tokens, j) ?? "")) return true;
     }
   }
   return false;
@@ -207,9 +211,9 @@ export function isEntryPoint(module: MangleModule, name: string): boolean {
     if (token.text === "{") { depth++; continue; }
     if (token.text === "}") { depth = Math.max(0, depth - 1); continue; }
     if (depth > 0) continue;
-    if (token.text !== "fn" || module.tokens[i + 1]?.text !== name) continue;
+    if (token.text !== "fn" || module.tokens[nextCodeToken(module.tokens, i + 1)]?.text !== name) continue;
     for (let j = i - 1; j >= 0 && module.tokens[j]?.text !== ";" && module.tokens[j]?.text !== "}"; j--) {
-      if (module.tokens[j]?.text === "@" && ["vertex", "fragment", "compute"].includes(module.tokens[j + 1]?.text ?? "")) return true;
+      if (["vertex", "fragment", "compute"].includes(attributeNameAt(module.tokens, j) ?? "")) return true;
     }
   }
   return false;

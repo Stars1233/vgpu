@@ -80,6 +80,19 @@ test("rejects duplicate parameter names", () => {
   })).toBe(false);
 });
 
+test("validates indexed parameter names instead of a custom iterator", () => {
+  const parameterNames: unknown[] = [42];
+  parameterNames[Symbol.iterator] = function* () {
+    yield "position";
+  };
+
+  expect(isShaderFunctionExport({
+    name: "surfaceColor",
+    resolvedName: "a",
+    parameterNames,
+  })).toBe(false);
+});
+
 test("returns false when malformed objects throw during inspection", () => {
   const value = Object.defineProperty({}, "name", {
     get() {

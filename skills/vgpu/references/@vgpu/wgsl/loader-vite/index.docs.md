@@ -39,8 +39,8 @@ declare function wgslVitePlugin(options?: WgslVitePluginOptions): {
 | Param | Type | Required | Default | Notes |
 |---|---|---|---|---|
 | options.minify | `boolean | MinifyOptions` | ✖ | `false` | Shared plugin/transform minify option. `true` means `{ whitespace: true, identifiers: "safe" }`; object form defaults to `{ whitespace: true, identifiers: "none" }`. |
-| source | string | ✔ | — | Raw WGSL file contents. Ordinary leaves without top-level imports or direct `export fn` declarations are emitted directly, optionally minified. Exported leaves and import graphs go through the resolver. |
-| id | string | ✔ | — | WGSL file id/path. Used as resolver entry for import graphs. Plugin transform ignores ids that do not end with `.wgsl`. |
+| source | string | ✔ | — | WGSL contents supplied to the transform. This value is authoritative for the entry module, including exported leaves and import graphs; imported modules still use normal file/package resolution. Ordinary leaves without top-level imports or direct `export fn` declarations are emitted directly, optionally minified. |
+| id | string | ✔ | — | WGSL file id/path. Anchors relative import resolution and dependency reporting; direct `transformWgsl()` calls may use an entry path that does not exist on disk. Plugin transform ignores ids that do not end with `.wgsl`. |
 | opts.source | string | ✔ | — | Object-overload source field. |
 | opts.id | string | ✔ | — | Object-overload id field. |
 | opts.onDependency | `(absPath: string) => void` | ✖ | no callback | Called for each transitive dependency as soon as its path resolves, before it is loaded. Discovered dependencies are still reported when a later resolution step throws. Leaf files intentionally do not call it. |
@@ -78,6 +78,7 @@ console.log(result.map === null, result.code.includes("version"));
 
 - Transform output default-exports `ShaderSource` v1: `{ version: 1, wgsl: "...", functionExports: [...] }`. Every new artifact includes `functionExports`, including `[]`; property presence is authoritative for integrations that address direct exports.
 - `wgslVitePlugin()` only handles ids ending with `.wgsl`; use `transformWgsl()` directly for tests and non-Vite tooling.
+- For resolver-backed transforms, `source` remains the entry module instead of being reread from `id`. This preserves changes made by earlier Vite plugins and supports virtual entry modules while imports continue to resolve relative to `id`.
 - Leaf shader transforms do not call `onDependency` because Vite already tracks the entry file. Imported graph transforms call it for transitive dependencies before loading them, including on resolution paths that later fail.
 - A leaf WGSL file may declare entry resources. Shared/imported modules must be pure: no `@group/@binding` outside the entry.
 - A leaf with a direct `export fn` goes through resolution even without imports: the author-only `export` marker is removed and the surviving function receives authored-to-final identity metadata. Ordinary leaves keep the byte-preserving fast path and emit `functionExports: []`.

@@ -25,6 +25,8 @@ vi.mock('@/lib/example-readme', () => ({
 }));
 vi.mock('@/lib/examples-registry', async () => import('./examples-registry'));
 vi.mock('@/lib/site', () => ({
+  localizedSitePath: (pathname: string, lang: string) =>
+    lang === 'en' ? pathname : `/${lang}${pathname}`,
   SITE_OG_IMAGE_PATH: '/og.png',
   siteUrl: (pathname: string) => pathname,
 }));
@@ -121,6 +123,14 @@ test('example detail keeps its actions and renders a guide CTA only when declare
   expect(hasLink(three, '/preview/three-tsl', 'Open fullscreen')).toBe(true);
   expect(hasElementType(three, 'example-actions')).toBe(true);
   expect(hasElementType(gradient, 'example-actions')).toBe(true);
+});
+
+test('example detail keeps the current language in its guide CTA', async () => {
+  const three = await ExampleDetailPage({
+    params: Promise.resolve({ lang: 'cn', slug: 'three-tsl' }),
+  });
+
+  expect(hasLink(three, '/cn/docs/guides/threejs', 'Read guide')).toBe(true);
 });
 
 test('Three guide metadata stays internal to the docs site', () => {

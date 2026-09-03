@@ -10,6 +10,11 @@ type EmittedShaderSource = ShaderSource & {
   readonly functionExports: readonly ShaderFunctionExport[];
 };
 
+const importGraphLoaders = [
+  ["Vite", async (source: string, entry: string) => artifact(await transformWgsl(source, entry))],
+  ["webpack", async (source: string, entry: string) => artifact((await webpack(source, entry)).code)],
+] as const;
+
 test("ordinary leaf artifacts preserve WGSL and authoritatively expose no function exports", async () => {
   const source = `// ordinary leaf\n@compute @workgroup_size(1) fn main() {\n  var value = 1u;\n}\n`;
   const vite = artifact(await transformWgsl(source, "/ordinary-vite.wgsl"));
@@ -41,6 +46,32 @@ test("direct-export leaf artifacts resolve their in-memory source before identif
     expect(emitted.wgsl).not.toMatch(/\bexport\b/u);
     expect(emitted.wgsl).not.toContain("authoredValue");
     expect(emitted.wgsl).toMatch(functionDeclaration(emitted.functionExports[0]!.resolvedName));
+  }
+});
+
+test("direct-export leaf DCE removes attributes attached through comment trivia", async () => {
+  const source = `@fragment fn main() -> @location(0) vec4f { return vec4f(1.0); }
+export @must_use /* attached trivia */ fn dead(value: f32) -> f32 { return value; }`;
+  const vite = artifact(await transformWgsl(source, "/missing/dead-vite.wgsl"));
+  const webpackArtifact = artifact((await webpack(source, "/missing/dead-webpack.wgsl")).code);
+
+  for (const emitted of [vite, webpackArtifact]) {
+    expect(emitted.functionExports).toEqual([]);
+    expect(emitted.wgsl).not.toContain("@must_use");
+    expect(emitted.wgsl).not.toContain("fn dead");
+  }
+});
+
+test("direct-export leaf entry points allow comment trivia after fn", async () => {
+  const source = "@fragment export fn /* declaration trivia */ fs_main() -> @location(0) vec4f { return vec4f(1.0); }";
+  const vite = artifact(await transformWgsl(source, "/missing/entry-vite.wgsl"));
+  const webpackArtifact = artifact((await webpack(source, "/missing/entry-webpack.wgsl")).code);
+
+  for (const emitted of [vite, webpackArtifact]) {
+    expect(emitted.functionExports).toEqual([
+      { name: "fs_main", resolvedName: "fs_main", parameterNames: [] },
+    ]);
+    expect(emitted.wgsl).toMatch(/fn\s+\/\* declaration trivia \*\/\s+fs_main\s*\(/u);
   }
 });
 
@@ -88,6 +119,43 @@ test("minified import-graph artifacts expose authored metadata for final declara
     ]);
     expect(emitted.wgsl).not.toContain("surfaceValue");
     expect(emitted.wgsl).toMatch(functionDeclaration(emitted.functionExports[0]!.resolvedName));
+  }
+});
+
+test.each(importGraphLoaders)("%s import graphs use the transformed entry source instead of stale disk contents", async (_label, load) => {
+  const dir = await mkdtemp(join(tmpdir(), "vgsl-entry-source-"));
+  const entry = join(dir, "main.wgsl");
+  const helper = join(dir, "helper.wgsl");
+  await writeFile(entry, `import { helperValue } from "./helper.wgsl";
+export fn diskValue(value: f32) -> f32 { return helperValue(value); }`);
+  await writeFile(helper, "export fn helperValue(value: f32) -> f32 { return value; }");
+
+  const transformedSource = `import { helperValue } from "./helper.wgsl";
+export fn memoryValue(value: f32) -> f32 { return helperValue(value); }`;
+  const emitted = await load(transformedSource, entry);
+
+  expect(emitted.functionExports.map((item) => item.name)).toEqual([
+    "memoryValue",
+    "helperValue",
+  ]);
+});
+
+test("import graphs resolve a virtual transformed entry with filesystem dependencies", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "vgsl-virtual-entry-source-"));
+  const entry = join(dir, "missing-entry.wgsl");
+  await writeFile(
+    join(dir, "helper.wgsl"),
+    "export fn helperValue(value: f32) -> f32 { return value; }",
+  );
+  const transformedSource = `import { helperValue } from "./helper.wgsl";
+export fn memoryValue(value: f32) -> f32 { return helperValue(value); }`;
+
+  for (const [, load] of importGraphLoaders) {
+    const emitted = await load(transformedSource, entry);
+    expect(emitted.functionExports.map((item) => item.name)).toEqual([
+      "memoryValue",
+      "helperValue",
+    ]);
   }
 });
 
