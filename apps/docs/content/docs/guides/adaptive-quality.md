@@ -171,3 +171,4 @@ All three reusable modules have seams: `createQualitySignals` accepts `navigator
 - [Compilation](concepts-compilation.docs.md): why `prepare()` compiles against the real target.
 - [Measuring](measuring.docs.md): confirm a pass is expensive before cutting it from Low.
 - [Performance playbook](performance-playbook.docs.md): default shapes that make High cheaper in the first place.
+- [Shipping to production](shipping-to-production.docs.md): the pre-PR checklist that decides when to offer a Low tier.
