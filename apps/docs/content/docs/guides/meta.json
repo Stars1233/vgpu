@@ -14,6 +14,7 @@
     "optimize-pass",
     "shader-fix-its",
     "performance-playbook",
+    "adaptive-quality",
     "---Testing---",
     "browser-testing",
     "..."

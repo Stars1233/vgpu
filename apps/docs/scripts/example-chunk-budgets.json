@@ -30,7 +30,8 @@
     "mnist-classifier": 63571,
     "air-painting": 71822,
     "three-tsl": 247268,
-    "particle-orbit": 160967
+    "particle-orbit": 160967,
+    "adaptive-quality": 56238
   },
   "exampleGrowth": {
     "percent": 2,

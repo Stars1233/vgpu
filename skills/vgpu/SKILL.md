@@ -6,8 +6,8 @@ description: >-
   and /perf only as slim tooling subpaths. Bundles performance guides and the API
   reference; load one doc at a time.
 vgpuVersion: 0.3.1
-gitSha: 93ba1195f9ed2c6aa09baff0b1e9e82608b5935e
-generatedAt: 2026-08-31T17:31:34.289Z
+gitSha: 6073d4c9812a16e368b57e9479294890ee958029
+generatedAt: 2026-09-02T23:52:26.622Z
 ---
 
 # vgpu
@@ -44,6 +44,7 @@ npx -y vgpu docs cat <symbol>    # print one doc, e.g. `cat Frame`, `cat perform
 
 Writing or optimizing a shader? Read **performance-model** first, then the rest as needed.
 
+- **Adaptive quality: switch render pipelines on GPU tier, battery, and FPS** — A hero or ambient background has to look great on a desktop GPU and still run on a three-year-old phone at 20% battery.  `references/guides/adaptive-quality.docs.md`
 - **WebGPU screenshots with agent-browser** — Use agent-browser to verify and capture vgpu previews that run WebGPU on Linux, including containers without a GPU.  `references/guides/agent-browser-webgpu.docs.md`
 - **Authoring shaders for performance** — Write WGSL so reflection can build stable layouts.  `references/guides/authoring-for-perf.docs.md`
 - **Browser testing with Playwright WebGPU** — Browser tests should exercise the same public API users copy: init(), surface(gpu, canvas, opts), explicit targets, and deterministic frame submiss…  `references/guides/browser-testing.docs.md`

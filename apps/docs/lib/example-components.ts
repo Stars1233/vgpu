@@ -32,6 +32,7 @@ export const exampleComponentLoaders = {
   'air-painting': () => import('../examples/air-painting/index'),
   'three-tsl': () => import('../examples/three-tsl/index'),
   'particle-orbit': () => import('../examples/particle-orbit/index'),
+  'adaptive-quality': () => import('../examples/adaptive-quality/index'),
 } satisfies Record<ExampleSlug, ExampleComponentLoader>;
 
 export function getExampleComponentLoader(slug: ExampleSlug): ExampleComponentLoader {
