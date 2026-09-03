@@ -21,6 +21,7 @@ export const exampleSlugs = [
   'depth-estimation',
   'mnist-classifier',
   'air-painting',
+  'tsl-exports',
   'three-tsl',
   'particle-orbit',
   'adaptive-quality',

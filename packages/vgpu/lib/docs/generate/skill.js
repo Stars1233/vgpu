@@ -45,7 +45,7 @@ function router(docs, stamp) {
   const guides = docs.filter((d) => d.kind === "guide");
   const concepts = guides.filter((d) => d.symbol.startsWith("concepts-")).sort(byOrderThenSymbol);
   const cliGuides = guides.filter((d) => d.symbol === "cli");
-  const performanceGuides = guides.filter((d) => !d.symbol.startsWith("concepts-") && d.symbol !== "cli").sort(bySymbol);
+  const taskGuides = guides.filter((d) => !d.symbol.startsWith("concepts-") && d.symbol !== "cli").sort(bySymbol);
   const api = docs.filter((d) => d.kind === "api");
   const packages = [...new Set(api.map((d) => d.package))].sort();
   const symbolCount = api.reduce((n, d) => n + d.symbols.length, 0);
@@ -55,8 +55,8 @@ function router(docs, stamp) {
     "name: vgpu",
     "description: >-",
     "  Build and optimize WebGPU apps with the vgpu package and entrypoints vgpu/node,",
-    "  vgpu/mock, vgpu/scene, and vgpu/client. Use @vgpu/render/inspect, /utils, /edit,",
-    "  and /perf only as slim tooling subpaths. Bundles performance guides and the API",
+    "  vgpu/mock, vgpu/scene, vgpu/client, and vgpu/three. Use @vgpu/render/inspect, /utils, /edit,",
+    "  and /perf only as slim tooling subpaths. Bundles task guides and the API",
     "  reference; load one doc at a time.",
     // Stamp: lets a human or agent tell a stale installed skill in one glance. gitSha/generatedAt
     // are volatile by design (change on every regeneration) — check-drift.js normalizes them away
@@ -96,11 +96,11 @@ function router(docs, stamp) {
     out.push(`- **${guide.topicTitle}** — ${guide.summary || summarize(guide.content)}  \`references${guide.virtualPath}\``);
   }
   out.push("");
-  out.push("## Performance guides");
+  out.push("## Guides");
   out.push("");
-  out.push("Writing or optimizing a shader? Read **performance-model** first, then the rest as needed.");
+  out.push("Open the guide matching your task. For performance work, read **performance-model** first.");
   out.push("");
-  for (const guide of performanceGuides) {
+  for (const guide of taskGuides) {
     out.push(`- **${guide.topicTitle}** — ${summarize(guide.content)}  \`references${guide.virtualPath}\``);
   }
   out.push("");

@@ -3,6 +3,7 @@
   "curation": {
     "packageOrder": [
       "vgpu",
+      "vgpu/three",
       "vgpu/scene",
       "@vgpu/wgsl",
       "@vgpu/wgsl-std",
@@ -82,6 +83,10 @@
         "srgb",
         "orbit",
         "..."
+      ],
+      "vgpu/three": [
+        "tsl-exports",
+        "..."
       ]
     },
     "guideGroups": [
@@ -95,7 +100,9 @@
         "title": "Integrations",
         "slugs": [
           "threejs",
-          "nextjs"
+          "nextjs",
+          "no-bundler",
+          "external-ticker"
         ]
       },
       {

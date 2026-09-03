@@ -2,12 +2,12 @@
 name: vgpu
 description: >-
   Build and optimize WebGPU apps with the vgpu package and entrypoints vgpu/node,
-  vgpu/mock, vgpu/scene, and vgpu/client. Use @vgpu/render/inspect, /utils, /edit,
-  and /perf only as slim tooling subpaths. Bundles performance guides and the API
+  vgpu/mock, vgpu/scene, vgpu/client, and vgpu/three. Use @vgpu/render/inspect, /utils, /edit,
+  and /perf only as slim tooling subpaths. Bundles task guides and the API
   reference; load one doc at a time.
 vgpuVersion: 0.3.1
-gitSha: ca5c975d9ed39cac4e1f7833872e0230fc2f5592
-generatedAt: 2026-09-03T13:35:34.767Z
+gitSha: 50e07577a316fb938958efa264419958cc2204f2
+generatedAt: 2026-09-03T14:01:48.639Z
 ---
 
 # vgpu
@@ -42,9 +42,9 @@ npx -y vgpu docs cat <symbol>    # print one doc, e.g. `cat Frame`, `cat perform
 
 - **CLI** — vgpu CLI commands, arguments, flags, and exit codes.  `references/guides/cli.docs.md`
 
-## Performance guides
+## Guides
 
-Writing or optimizing a shader? Read **performance-model** first, then the rest as needed.
+Open the guide matching your task. For performance work, read **performance-model** first.
 
 - **Adaptive quality: switch render pipelines on GPU tier, battery, and FPS** — A hero or ambient background has to look great on a desktop GPU and still run on a three-year-old phone at 20% battery.  `references/guides/adaptive-quality.docs.md`
 - **WebGPU screenshots with agent-browser** — Use agent-browser to verify and capture vgpu previews that run WebGPU on Linux, including containers without a GPU.  `references/guides/agent-browser-webgpu.docs.md`
@@ -70,19 +70,19 @@ Writing or optimizing a shader? Read **performance-model** first, then the rest 
 - **The default workflow for developing shaders with vgpu** — Follow these eight steps in order every time you write or change a shader.  `references/guides/shader-workflow.docs.md`
 - **Shipping to production: the pre-PR checklist** — A render that looks right on the machine it was written on is halfway done.  `references/guides/shipping-to-production.docs.md`
 - **Practical texture-format matrix** — Choose a target format from the operations it must support, not just its channel precision.  `references/guides/texture-formats.docs.md`
-- **Using vgpu WGSL modules with three.js** — vgpu's WGSL loader can flatten a reusable WGSL module graph into ordinary WGSL, while three.js TSL can call a WGSL function from a node material.  `references/guides/threejs.docs.md`
+- **Use WGSL modules in three.js TSL** — vgpu can resolve a reusable WGSL module graph, and three.js TSL can call WGSL functions from node materials.  `references/guides/threejs.docs.md`
 - **Two-pass rendering: offscreen depth target composited to the canvas** — Surfaces and canvases have no depth buffer, and Draws need one for any real 3D scene.  `references/guides/two-pass-rendering.docs.md`
 
 ## API reference
 
-258 symbols across 20 packages — open `references/<package>/<file>` or `npx -y vgpu docs cat <symbol>`:
+263 symbols across 21 packages — open `references/<package>/<file>` or `npx -y vgpu docs cat <symbol>`:
 
 - `@vgpu/adapter-node` — createNodeAdapter, createNodeDevice
 - `@vgpu/render/edit` — bevel, bridge, dissolveEdges, dissolveFaces, dissolveVertices, EdgeView, EditableMesh, EditableMeshValue, ElementDomain, ElementSelection, ElementSet, extrude, FaceView, fillHole, gridFill, healManifold, inset, KernelHandle, loopCut, mergeByDistance, MeshEditError, MeshEditWarning, recomputeNormals, ScoredSelection, subdivideEdges, subdivideFaces, toEditable, toEditableWithDiagnostics, VertexView
 - `@vgpu/render/inspect` — InspectMaterial, InspectMaterialUniformParams, meshToReadable, meshToWireframe, normalDebugMaterial, NormalDebugMaterialSpec, wireframeMaterial, WireframeMaterialSpec, WireframeMesh
 - `@vgpu/render/perf` — gpuFrameTime, GpuFrameTimeOptions, GpuFrameTimeResult, pixelDiff, PixelDiffResult
 - `@vgpu/render/utils` — canvasMouseTracker, CanvasMouseTracker, CanvasMouseTrackerSpec, canvasResolution, CanvasResolution, frameClock, FrameClock
-- `@vgpu/wgsl` — compile, ResolvedShader, SourceMap, WGSLAst, WGSLSource
+- `@vgpu/wgsl` — compile, isShaderFunctionExport, ResolvedShader, ShaderFunctionExport, ShaderSource, SourceMap, WGSLAst, WGSLSource
 - `@vgpu/wgsl-std/color` — applyExposure, luminance, luminanceThreshold, tonemapAces, tonemapReinhard
 - `@vgpu/wgsl-std/fullscreen` — fullscreenTriangleClip, fullscreenTriangleUv
 - `@vgpu/wgsl-std/hash` — hash1, hash2, hash3, hashU32, pcg2d, pcg3d, unitFloat
@@ -97,3 +97,4 @@ Writing or optimizing a shader? Read **performance-model** first, then the rest 
 - `vgpu/core` — bind, Buffer, BufferOptions, createBindGroup, createBindGroupLayout, CreateDeviceOptions, createPipelineLayout, createRenderBundle, createSampler, Device, DeviceOptions, Queue, RenderBundleOptions, RenderBundleRecorder, ScalarUniformType, StorageBuffer, StorageBufferOptions, StructuredUniform, StructuredUniformOptions, Texture, TextureOptions, Uniform, UniformField, UniformLayout, UniformLayoutInfo, UniformOptions, UniformPool, UniformPoolOptions, UniformSlot, UniformValues, ValidationError, VectorUniformInput, VGPUAdapter, VGPUError, WgslUniformType
 - `vgpu/mock` — createMockAdapter
 - `vgpu/scene` — ambientLight, AmbientLight, AmbientLightOptions, AmbientLightValues, box, BoxOptions, Camera, CameraVec3, capsule, CapsuleOptions, ColorMaterialOptions, ColorMaterialValues, cone, ConeOptions, cylinder, CylinderOptions, degToRad, directionalLight, DirectionalLight, DirectionalLightOptions, DirectionalLightValues, disk, DiskOptions, dodecahedron, fullscreenQuad, FullscreenQuadOptions, geometries, GeometryKind, group, icosahedron, icosphere, IcosphereOptions, lambertMaterial, LambertMaterial, Mat4, MaterialBlend, mesh, MeshNode, NodeOptions, NodeTransformValues, normalMaterial, NormalMaterial, octahedron, orbit, orbitControls, OrbitControls, OrbitControlsElement, OrbitControlsOptions, OrbitControlsValues, OrbitOptions, orthographicCamera, OrthographicCamera, OrthographicCameraOptions, OrthographicCameraValues, perspectiveCamera, PerspectiveCamera, PerspectiveCameraOptions, PerspectiveCameraValues, plane, PlaneOptions, PolyhedronOptions, QuatLike, ring, RingOptions, scene, SceneCamera, SceneGeometry, SceneGeometryOfKind, SceneMaterial, SceneMaterialKind, SceneNode, SceneNodeKind, shaderMaterial, ShaderMaterial, ShaderMaterialOptions, sphere, SphereOptions, srgb, tetrahedron, torus, TorusOptions, unlitMaterial, UnlitMaterial, Vec3, Vec3Like
+- `vgpu/three` — tslExports, TslExportsErrorCode

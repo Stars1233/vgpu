@@ -562,6 +562,13 @@ importers:
       zod:
         specifier: ^4.4.3
         version: 4.4.3
+    devDependencies:
+      '@types/three':
+        specifier: ^0.180.0
+        version: 0.180.0
+      three:
+        specifier: ^0.180.0
+        version: 0.180.0
 
   packages/wgsl:
     dependencies:

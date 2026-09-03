@@ -6,6 +6,8 @@
     "---Integrations---",
     "threejs",
     "nextjs",
+    "no-bundler",
+    "external-ticker",
     "---Performance---",
     "performance-model",
     "performance-patterns",
