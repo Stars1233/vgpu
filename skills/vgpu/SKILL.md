@@ -6,8 +6,8 @@ description: >-
   and /perf only as slim tooling subpaths. Bundles performance guides and the API
   reference; load one doc at a time.
 vgpuVersion: 0.3.1
-gitSha: 6073d4c9812a16e368b57e9479294890ee958029
-generatedAt: 2026-09-02T23:52:26.622Z
+gitSha: ca5c975d9ed39cac4e1f7833872e0230fc2f5592
+generatedAt: 2026-09-03T13:35:34.767Z
 ---
 
 # vgpu
@@ -18,6 +18,8 @@ doc you can load on demand with the CLI — **load only what you need, don't rea
 vgpu is layered: vgpu/core (thin WebGPU wrappers) → vgpu (main API with WGSL reflection) → vgpu/scene (geometry/camera helpers). Lower layers are always accessible and interoperable.
 
 Glossary: **Surface** means a canvas-backed render target (swapchain) created with `surface(gpu, canvas)`; do not confuse it with the general phrase ‘API surface’.
+
+Finishing, opening a PR, or calling a render done? Read **shipping-to-production** first (`references/guides/shipping-to-production.docs.md`).
 
 ```sh
 npx -y vgpu docs find <query>    # search doc paths + symbols
@@ -66,6 +68,7 @@ Writing or optimizing a shader? Read **performance-model** first, then the rest 
 - **Debugging shaders by extracting internal values** — A shader has no console.log.  `references/guides/shader-debugging.docs.md`
 - **Shader diagnostics and fix-its** — Use these messages as the self-correction map for generated shader code.  `references/guides/shader-fix-its.docs.md`
 - **The default workflow for developing shaders with vgpu** — Follow these eight steps in order every time you write or change a shader.  `references/guides/shader-workflow.docs.md`
+- **Shipping to production: the pre-PR checklist** — A render that looks right on the machine it was written on is halfway done.  `references/guides/shipping-to-production.docs.md`
 - **Practical texture-format matrix** — Choose a target format from the operations it must support, not just its channel precision.  `references/guides/texture-formats.docs.md`
 - **Using vgpu WGSL modules with three.js** — vgpu's WGSL loader can flatten a reusable WGSL module graph into ordinary WGSL, while three.js TSL can call a WGSL function from a node material.  `references/guides/threejs.docs.md`
 - **Two-pass rendering: offscreen depth target composited to the canvas** — Surfaces and canvases have no depth buffer, and Draws need one for any real 3D scene.  `references/guides/two-pass-rendering.docs.md`

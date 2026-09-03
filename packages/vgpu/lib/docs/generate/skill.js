@@ -75,6 +75,8 @@ function router(docs, stamp) {
     "",
     "Glossary: **Surface** means a canvas-backed render target (swapchain) created with `surface(gpu, canvas)`; do not confuse it with the general phrase ‘API surface’.",
     "",
+    "Finishing, opening a PR, or calling a render done? Read **shipping-to-production** first (`references/guides/shipping-to-production.docs.md`).",
+    "",
     "```sh",
     "npx -y vgpu docs find <query>    # search doc paths + symbols",
     "npx -y vgpu docs grep -i <term>  # search doc CONTENT",
